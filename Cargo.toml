@@ -1,9 +1,8 @@
 [package]
 name = "sliding_rust"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
 
 [dependencies]
-
-ndarray = { version = "0.15", features = ["std"] }
-num-traits = "0.2"
+ndarray = "0.17.2"
+num-traits = "0.2.19"
