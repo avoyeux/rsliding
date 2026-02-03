@@ -1,42 +1,42 @@
 // ! N-dimensional convolution operation.
 
-use ndarray::{ArrayD, ArrayViewD, IxDyn};
+use ndarray::{ArrayD, IxDyn};
 use num_traits::{Zero, Float};
 use std::ops::AddAssign;
 
 // local
-use crate::utils::ConvolutionSetup;
+use crate::utils::{PaddingMode, PaddingWorkspace};
 
-// todo add checks on shapes and ndim later
-// todo add padding and stride (?) later
 
 /// N-dimensional convolution for a kernel with weights and an input array with NaNs.
-pub fn convolution<T>(data: ArrayViewD<'_, T>, kernel: ArrayViewD<'_, T>) -> ArrayD<T>
+pub fn convolution<T>(padded: PaddingWorkspace<T>) -> PaddingWorkspace<T>
 where
     T: Float + Zero + AddAssign,
 {
-    let convolution_setup = ConvolutionSetup::new(data.view(), kernel.view());
 
-    let mut output = unsafe {
-        ArrayD::<T>::uninit(convolution_setup.out_raw_dim.clone()).assume_init()
-    };
-    let mut in_idx = vec![0usize; convolution_setup.ndim];
+    // padded data
+    let mut output = padded.data;
+    let mut in_idx = vec![0usize; padded.ndim];
+    let out_raw_dim = output.raw_dim();
+    let kernel_raw_dim = padded.kernel.raw_dim();
 
-    for out_idx in ndarray::indices(convolution_setup.out_raw_dim) {
+    // iterate over output
+    for out_idx in ndarray::indices(out_raw_dim) {
         // count
         let mut acc = T::zero();
         let mut has_valid = false;
 
-        for k_idx in ndarray::indices(convolution_setup.kernel_raw_dim.clone()) {
+        // iterate over kernel
+        for k_idx in ndarray::indices(kernel_raw_dim.clone()) {
             // input index
-            for d in 0..convolution_setup.ndim {
+            for d in 0..padded.ndim {
                 in_idx[d] = out_idx[d] + k_idx[d];
             }
 
             // no bounds check
             unsafe {
-                let input_val = *data.uget(IxDyn(&in_idx));
-                let kernel_val = *kernel.uget(k_idx);
+                let input_val = *padded.data.uget(IxDyn(&in_idx));
+                let kernel_val = *padded.kernel.uget(k_idx);
 
                 if !input_val.is_nan() {
                     acc += input_val * kernel_val;
@@ -49,9 +49,18 @@ where
             *output.uget_mut(out_idx) = if has_valid { acc } else { T::nan() };
         }
     }
-    output
+    padded
 }
 
+pub fn testing_something<T: Default + Float + Zero>(data: ArrayD<T>, kernel: ArrayD<T>) -> Result<(), String> {
+    let padding_mode = PaddingMode::Constant(T::zero());
+    let mut pad_ws = PaddingWorkspace::new(data.shape(), kernel.shape(), padding_mode)?;
+    pad_ws.pad_input(data.view());
+
+    // convolution writes directly into the reusable output buffer
+    let mut output = pad_ws.output_view_mut();
+    Ok(())
+}
 
 #[cfg(test)]
 mod tests {
