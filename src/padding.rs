@@ -1,39 +1,33 @@
 //! Paddding (change the filename to padding.rs later)
-use ndarray::{ArrayD, ArrayViewD, Axis, IxDyn, Slice, ArrayViewMutD};
-use num_traits::{Zero, Float};
+use ndarray::{ArrayD, ArrayViewD, Axis, IxDyn, Slice};
 
 // todo see if strides implementation is needed later
 
-pub enum PaddingMode<T>
-where
-    T: Default + Float + Zero,
-{
-    Constant(T),
+pub enum PaddingMode {
+    Constant(f64),
     Reflect,
     Replicate,
     Wrap,
 }
 
-pub struct PaddingWorkspace<T>
-where
-    T: Default + Float + Zero,
-{
-    ndim: usize,
-    pad: Vec<usize>,
-    padded_shape: IxDyn,
-    valid_shape: IxDyn,
-    padded_buffer: ArrayD<T>,
-    output_buffer: ArrayD<T>,      // reused by convolution/sliding ops
+pub struct PaddingWorkspace {
+    pub ndim: usize,  // number of dimensions
+    pub pad: Vec<usize>,  // per-dimension padding
+    pub padding_mode: PaddingMode,  // padding mode  // todo use it
+    pub kernel_shape: IxDyn,  // kernel shape
+    pub padded_shape: IxDyn,  // shape after padding  // ? no need I thing.
+    pub valid_shape: IxDyn,  // initial input shape
+    pub padded_buffer: ArrayD<f64>,  // reused by padding operations
+    pub output_buffer: ArrayD<f64>,  // reused by convolution/sliding ops
 }
 
-impl<T> PaddingWorkspace<T>
-where
-    T: Default + Float + Zero,
-{
+impl PaddingWorkspace {
+    /// Creates a new PaddingWorkspace.
+    /// Check the kernel validity and setups the padded and output buffers.
     pub fn new(
         input_shape: &[usize],
         kernel_shape: &[usize],
-        padding_mode: PaddingMode<T>,
+        padding_mode: PaddingMode,
     ) -> Result<Self, String> {
         
         //check
@@ -41,6 +35,7 @@ where
 
         let ndim = input_shape.len();
         let pad: Vec<usize> = kernel_shape.iter().map(|&k| k / 2).collect();
+        let kernel_shape = IxDyn(kernel_shape);
         let padded_shape = IxDyn(
             input_shape
                 .iter()
@@ -54,10 +49,12 @@ where
         Ok(Self {
             ndim,
             pad,
+            padding_mode,
+            kernel_shape,
             padded_shape: padded_shape.clone(),
-            valid_shape,
+            valid_shape: valid_shape.clone(),
             padded_buffer: ArrayD::zeros(padded_shape),
-            output_buffer: ArrayD::zeros(IxDyn(input_shape)),
+            output_buffer: ArrayD::zeros(valid_shape),
         })
     }
 
@@ -81,27 +78,19 @@ where
         Ok(())
     }
 
-    pub fn pad_input<'a>(&mut self, input: ArrayViewD<'a, T>) {
+    /// Pad the input data into the padded buffer.
+    /// input data shape must match the valid shape (and not the padded shape).
+    pub fn pad_input<'a>(&mut self, input: ArrayViewD<'a, f64>) {
         // reuse existing buffer; fill depending on mode
-        self.padded_buffer.fill(T::zero());
+        self.padded_buffer.fill(0.); // todo change depending on mode
+
+        let input_shape = input.shape();
         let mut window = self.padded_buffer.view_mut();
         for (axis, p) in self.pad.iter().enumerate() {
             let start = *p as isize;
-            let end = start + input.shape()[axis] as isize;
+            let end = start + input_shape[axis] as isize;
             window = window.slice_axis_move(Axis(axis), Slice::from(start..end));
         }
         window.assign(&input);
-    }
-
-    pub fn padded_view(&self) -> ArrayViewD<'_, T> {
-        self.padded_buffer.view()
-    }
-
-    pub fn output_view_mut(&mut self) -> ArrayViewMutD<'_, T> {
-        self.output_buffer.view_mut()
-    }
-
-    pub fn take_output(&mut self) -> ArrayD<T> {
-        std::mem::take(&mut self.output_buffer)
     }
 }

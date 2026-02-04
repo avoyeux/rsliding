@@ -1,1 +1,22 @@
-/target
+# All blacklisted
+*
+
+# DIRs whitelisted
+!src/
+!src/**/
+
+# TYPEs whitelist
+!**/*.rs
+!**/*.md
+!**/*.yml
+!**/*.txt
+!**/*.toml
+
+# BLACKLIST specific dirs
+**/.*/
+**/__pycache__/
+
+# FILEs whitelisted
+!README.md
+!.gitignore
+!LICENSE
