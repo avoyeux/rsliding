@@ -5,10 +5,12 @@ use ndarray::{ArrayViewD, IxDyn};
 // local
 use crate::padding::PaddingWorkspace;
 
-
 /// N-dimensional sliding mean operation.
 /// Handles NaN values by ignoring them in the mean calculation.
-pub fn sliding_mean<'a>(mut padded: PaddingWorkspace, kernel: ArrayViewD<'a, f64>) -> PaddingWorkspace {
+pub fn sliding_mean<'a>(
+    mut padded: PaddingWorkspace,
+    kernel: ArrayViewD<'a, f64>,
+) -> PaddingWorkspace {
     let mut padded_idx = vec![0usize; padded.ndim];
     let kernel_raw_dim = kernel.raw_dim();
 
@@ -38,8 +40,11 @@ pub fn sliding_mean<'a>(mut padded: PaddingWorkspace, kernel: ArrayViewD<'a, f64
         }
         // no bounds check
         unsafe {
-            *padded.output_buffer.uget_mut(input_idx) = 
-                if weighted_sum == 0. { f64::NAN } else { acc / weighted_sum };
+            *padded.output_buffer.uget_mut(input_idx) = if weighted_sum == 0. {
+                f64::NAN
+            } else {
+                acc / weighted_sum
+            };
         }
     }
     padded

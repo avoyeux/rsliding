@@ -11,14 +11,14 @@ pub enum PaddingMode {
 }
 
 pub struct PaddingWorkspace {
-    pub ndim: usize,  // number of dimensions
-    pub pad: Vec<usize>,  // per-dimension padding
+    pub ndim: usize,                // number of dimensions
+    pub pad: Vec<usize>,            // per-dimension padding
     pub padding_mode: PaddingMode,  // padding mode  // todo use it
-    pub kernel_shape: IxDyn,  // kernel shape
-    pub padded_shape: IxDyn,  // shape after padding  // ? no need I thing.
-    pub valid_shape: IxDyn,  // initial input shape
-    pub padded_buffer: ArrayD<f64>,  // reused by padding operations
-    pub output_buffer: ArrayD<f64>,  // reused by convolution/sliding ops
+    pub kernel_shape: IxDyn,        // kernel shape
+    pub padded_shape: IxDyn,        // shape after padding  // ? no need I thing.
+    pub valid_shape: IxDyn,         // initial input shape
+    pub padded_buffer: ArrayD<f64>, // reused by padding operations
+    pub output_buffer: ArrayD<f64>, // reused by convolution/sliding ops
 }
 
 impl PaddingWorkspace {
@@ -29,7 +29,6 @@ impl PaddingWorkspace {
         kernel_shape: &[usize],
         padding_mode: PaddingMode,
     ) -> Result<Self, String> {
-        
         //check
         Self::check_kernel(input_shape, kernel_shape)?;
 
