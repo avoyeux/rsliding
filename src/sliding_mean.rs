@@ -33,6 +33,7 @@ pub fn sliding_mean<'a>(
                 let kernel_val = *kernel.uget(k_idx);
 
                 if !input_val.is_nan() {
+                    // ? should I add a 0. check for kernel_val ?
                     acc += input_val * kernel_val;
                     weighted_sum += kernel_val;
                 }
