@@ -1,0 +1,20 @@
+[build-system]
+requires = ["maturin>=1.5"]
+build-backend = "maturin"
+
+[project]
+name = "rsliding"         # package name on PyPI
+version = "0.1.0"
+requires-python = ">=3.9"
+description = "Fast sliding window operations implemented in Rust"
+authors = [{ name = "You", email = "you@example.com" }]
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Rust",
+  "Programming Language :: Python :: 3",
+]
+
+[tool.maturin]
+# Use the Python bindings crate
+bindings = "pyo3"
+manifest-path = "rsliding_py/Cargo.toml"

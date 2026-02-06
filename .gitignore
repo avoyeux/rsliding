@@ -2,8 +2,10 @@
 *
 
 # DIRs whitelisted
-!src/
-!src/**/
+!rsliding_core/
+!rsliding_core/**/
+!rsliding_py/
+!rsliding_py/**/
 
 # TYPEs whitelist
 !**/*.rs
