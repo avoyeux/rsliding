@@ -1,6 +1,6 @@
 // ! N-dimensional convolution operation.
 
-use ndarray::{ArrayViewD, IxDyn};
+use ndarray::{ArrayViewD, ArrayViewMutD, IxDyn};
 
 // local
 use crate::padding::PaddingWorkspace;
@@ -9,9 +9,10 @@ use crate::padding::PaddingWorkspace;
 /// The NaN values in the input are ignored in the convolution operation.
 /// If no valid values in the kernel window, the output is set to NaN.
 pub fn convolution<'a>(
-    mut padded: PaddingWorkspace,
+    padded: &PaddingWorkspace,
+    mut data: ArrayViewMutD<'a, f64>,
     kernel: ArrayViewD<'a, f64>,
-) -> PaddingWorkspace {
+) {
     let mut padded_idx = vec![0usize; padded.ndim];
     let kernel_raw_dim = kernel.raw_dim();
 
@@ -41,8 +42,7 @@ pub fn convolution<'a>(
         }
         // no bounds check
         unsafe {
-            *padded.output_buffer.uget_mut(input_idx) = if !has_valid { f64::NAN } else { acc };
+            *data.uget_mut(input_idx) = if !has_valid { f64::NAN } else { acc };
         }
     }
-    padded
 }

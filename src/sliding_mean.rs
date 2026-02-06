@@ -1,6 +1,6 @@
 //! To compute the sliding mean of an n-dimensional array with possible NaN values.
 
-use ndarray::{ArrayViewD, IxDyn};
+use ndarray::{ArrayViewD, ArrayViewMutD, IxDyn};
 
 // local
 use crate::padding::PaddingWorkspace;
@@ -8,9 +8,10 @@ use crate::padding::PaddingWorkspace;
 /// N-dimensional sliding mean operation.
 /// Handles NaN values by ignoring them in the mean calculation.
 pub fn sliding_mean<'a>(
-    mut padded: PaddingWorkspace,
+    padded: &PaddingWorkspace,
+    mut data: ArrayViewMutD<'a, f64>,
     kernel: ArrayViewD<'a, f64>,
-) -> PaddingWorkspace {
+) {
     let mut padded_idx = vec![0usize; padded.ndim];
     let kernel_raw_dim = kernel.raw_dim();
 
@@ -32,7 +33,7 @@ pub fn sliding_mean<'a>(
                 let input_val = *padded.padded_buffer.uget(IxDyn(&padded_idx));
                 let kernel_val = *kernel.uget(k_idx);
 
-                if !input_val.is_nan() {
+                if !input_val.is_nan() && kernel_val != 0. {
                     // ? should I add a 0. check for kernel_val ?
                     acc += input_val * kernel_val;
                     weighted_sum += kernel_val;
@@ -41,12 +42,11 @@ pub fn sliding_mean<'a>(
         }
         // no bounds check
         unsafe {
-            *padded.output_buffer.uget_mut(input_idx) = if weighted_sum == 0. {
+            *data.uget_mut(input_idx) = if weighted_sum == 0. {
                 f64::NAN
             } else {
                 acc / weighted_sum
             };
         }
     }
-    padded
 }

@@ -2,6 +2,7 @@
 use ndarray::{ArrayD, ArrayViewD, Axis, IxDyn, Slice};
 
 // todo see if strides implementation is needed later
+// todo add proper padding mode implementation
 
 pub enum PaddingMode {
     Constant(f64),
@@ -12,13 +13,11 @@ pub enum PaddingMode {
 
 pub struct PaddingWorkspace {
     pub ndim: usize,                // number of dimensions
-    pub pad: Vec<usize>,            // per-dimension padding
-    pub padding_mode: PaddingMode,  // padding mode  // todo use it
-    pub kernel_shape: IxDyn,        // kernel shape
-    pub padded_shape: IxDyn,        // shape after padding  // ? no need I thing.
+    pad: Vec<usize>,                // per-dimension padding
+    padding_mode: PaddingMode,      // padding mode
     pub valid_shape: IxDyn,         // initial input shape
     pub padded_buffer: ArrayD<f64>, // reused by padding operations
-    pub output_buffer: ArrayD<f64>, // reused by convolution/sliding ops
+    filled: bool,
 }
 
 impl PaddingWorkspace {
@@ -34,7 +33,6 @@ impl PaddingWorkspace {
 
         let ndim = input_shape.len();
         let pad: Vec<usize> = kernel_shape.iter().map(|&k| k / 2).collect();
-        let kernel_shape = IxDyn(kernel_shape);
         let padded_shape = IxDyn(
             input_shape
                 .iter()
@@ -49,11 +47,9 @@ impl PaddingWorkspace {
             ndim,
             pad,
             padding_mode,
-            kernel_shape,
-            padded_shape: padded_shape.clone(),
             valid_shape: valid_shape.clone(),
             padded_buffer: ArrayD::zeros(padded_shape),
-            output_buffer: ArrayD::zeros(valid_shape),
+            filled: false,
         })
     }
 
@@ -81,7 +77,15 @@ impl PaddingWorkspace {
     /// input data shape must match the valid shape (and not the padded shape).
     pub fn pad_input<'a>(&mut self, input: ArrayViewD<'a, f64>) {
         // reuse existing buffer; fill depending on mode
-        self.padded_buffer.fill(0.); // todo change depending on mode
+        match self.padding_mode {
+            PaddingMode::Constant(value) => {
+                if !self.filled {
+                    self.padded_buffer.fill(value)
+                }
+            }
+            _ => panic!("Mode not added yet"),
+        }
+        self.filled = true;
 
         let input_shape = input.shape();
         let mut window = self.padded_buffer.view_mut();

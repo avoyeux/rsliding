@@ -8,10 +8,11 @@ use crate::padding::PaddingWorkspace;
 /// N-dimensional sliding standard deviation
 /// also keeps the sliding mean as it might be chosen for the sigma clipping
 pub fn sliding_standard_deviation<'a>(
-    mut padded: PaddingWorkspace,
+    padded: &PaddingWorkspace,
+    mut data: ArrayViewMutD<'a, f64>,
     mut mean_buffer: ArrayViewMutD<'a, f64>,
     kernel: ArrayViewD<'a, f64>,
-) -> PaddingWorkspace {
+) {
     let mut padded_idx = vec![0usize; padded.ndim];
     let kernel_raw_dim = kernel.raw_dim();
 
@@ -51,12 +52,11 @@ pub fn sliding_standard_deviation<'a>(
             *mean_buffer.uget_mut(&input_idx) = if n == 0 { f64::NAN } else { mean };
 
             // std
-            *padded.output_buffer.uget_mut(input_idx) = if n == 0 {
+            *data.uget_mut(input_idx) = if n == 0 {
                 f64::NAN
             } else {
                 (m2 / (n as f64)).sqrt()
             };
         }
     }
-    padded
 }
