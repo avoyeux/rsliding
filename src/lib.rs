@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[test]
-    fn check_mean() {
+    fn check_mean_zero() {
         // prepare data
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
@@ -85,7 +85,29 @@ mod tests {
     }
 
     #[test]
-    fn check_mean_std() {
+    fn check_mean_nan() {
+        // prepare data
+        let (mut data, kernel) = own_data();
+        let pad_mode = PaddingMode::Constant(f64::NAN);
+        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        padded.pad_input(data.view());
+
+        // compute
+        sliding_mean(&padded, data.view_mut(), kernel.view());
+
+        // compare
+        let expected_mean = arr2(&[
+            [10. / 3., 8. / 3., 9. / 4., 2.5],
+            [2., 3., 18. / 7., 9. / 4.],
+            [2., 17. / 7., 8. / 3., 4.],
+            [0.5, 2.5, 3., 11. / 3.],
+        ])
+        .into_dyn();
+        assert_abs_diff_eq!(data, expected_mean, epsilon = 1e-8);
+    }
+
+    #[test]
+    fn check_mean_std_zero() {
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
         let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
@@ -112,7 +134,34 @@ mod tests {
     }
 
     #[test]
-    fn check_median() {
+    fn check_mean_std_nan() {
+        let (mut data, kernel) = own_data();
+        let pad_mode = PaddingMode::Constant(f64::NAN);
+        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        padded.pad_input(data.view());
+
+        // compute
+        let mut mean_buffer = ArrayD::zeros(padded.valid_shape.clone());
+        sliding_standard_deviation(
+            &padded,
+            data.view_mut(),
+            mean_buffer.view_mut(),
+            kernel.view(),
+        );
+
+        // compare
+        let expected_mean = arr2(&[
+            [10. / 3., 8. / 3., 9. / 4., 2.5],
+            [2., 3., 18. / 7., 9. / 4.],
+            [2., 17. / 7., 8. / 3., 4.],
+            [0.5, 2.5, 3., 11. / 3.],
+        ])
+        .into_dyn();
+        assert_abs_diff_eq!(data, expected_mean, epsilon = 1e-8);
+    }
+
+    #[test]
+    fn check_median_zero() {
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
         let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
@@ -133,10 +182,31 @@ mod tests {
     }
 
     #[test]
-    fn check_standard_deviation() {
+    fn check_median_nan() {
+        let (mut data, kernel) = own_data();
+        let pad_mode = PaddingMode::Constant(0.);
+        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        padded.pad_input(data.view());
+
+        // compute
+        sliding_weighted_median(&padded, data.view_mut(), kernel.view());
+
+        // compare
+        let expected_median = arr2(&[
+            [3., 2., 2.5, 2.5],
+            [3., 3., 3., 2.],
+            [1.5, 2., 3., 4.],
+            [0.5, 2., 3.5, 3.],
+        ])
+        .into_dyn();
+        assert_abs_diff_eq!(data, expected_median, epsilon = 1e-8);
+    }
+
+    #[test]
+    fn check_standard_deviation_zero() {
         // prepare data
         let (mut data, kernel) = own_data();
-        let pad_mode = PaddingMode::Constant(0.0f64);
+        let pad_mode = PaddingMode::Constant(0.);
         let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
         padded.pad_input(data.view());
 
@@ -166,6 +236,50 @@ mod tests {
         let std_3_1 = std_population(&[0., 0., 0., 1., 1., 3., 5.]);
         let std_3_2 = std_population(&[0., 0., 0., 0., 3., 4., 5.]);
         let std_3_3 = std_population(&[0., 0., 0., 0., 0., 3., 3., 5.]);
+        let expected_std = arr2(&[
+            [std_0_0, std_0_1, std_0_2, std_0_3],
+            [std_1_0, std_1_1, std_1_2, std_1_3],
+            [std_2_0, std_2_1, std_2_2, std_2_3],
+            [std_3_0, std_3_1, std_3_2, std_3_3],
+        ])
+        .into_dyn();
+        assert_abs_diff_eq!(data, expected_std, epsilon = 1e-8);
+    }
+
+    #[test]
+    fn check_standard_deviation_nan() {
+        // prepare data
+        let (mut data, kernel) = own_data();
+        let pad_mode = PaddingMode::Constant(f64::NAN);
+        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        padded.pad_input(data.view());
+
+        // compute
+        let mut mean_buffer = ArrayD::zeros(padded.valid_shape.clone());
+        sliding_standard_deviation(
+            &padded,
+            data.view_mut(),
+            mean_buffer.view_mut(),
+            kernel.view(),
+        );
+
+        // compare
+        let std_0_0 = std_population(&[2., 3., 5.]);
+        let std_0_1 = std_population(&[1., 2., 5.]);
+        let std_0_2 = std_population(&[0., 2., 3., 4.]);
+        let std_0_3 = std_population(&[1., 4.]);
+        let std_1_0 = std_population(&[1., 2., 3.]);
+        let std_1_1 = std_population(&[1., 1., 3., 5., 5.]);
+        let std_1_2 = std_population(&[0., 1., 2., 3., 3., 4., 5.]);
+        let std_1_3 = std_population(&[0., 1., 3., 5.]);
+        let std_2_0 = std_population(&[0., 1., 2., 5.]);
+        let std_2_1 = std_population(&[0., 1., 1., 2., 3., 5., 5.]);
+        let std_2_2 = std_population(&[0., 2., 3., 3., 4., 4.]);
+        let std_2_3 = std_population(&[3., 4., 4., 5.]);
+        let std_3_0 = std_population(&[0., 1.]);
+        let std_3_1 = std_population(&[1., 1., 3., 5.]);
+        let std_3_2 = std_population(&[0., 3., 4., 5.]);
+        let std_3_3 = std_population(&[3., 3., 5.]);
         let expected_std = arr2(&[
             [std_0_0, std_0_1, std_0_2, std_0_3],
             [std_1_0, std_1_1, std_1_2, std_1_3],
