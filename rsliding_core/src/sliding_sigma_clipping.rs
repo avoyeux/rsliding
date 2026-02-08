@@ -4,7 +4,7 @@ use ndarray::{ArrayD, ArrayViewD, ArrayViewMutD, Zip};
 
 // local
 use crate::padding::PaddingWorkspace;
-use crate::sliding_median::sliding_weighted_median;
+use crate::sliding_median::sliding_median;
 use crate::sliding_standard_deviation::sliding_standard_deviation;
 
 pub enum CenterMode {
@@ -39,7 +39,7 @@ pub fn sliding_sigma_clipping<'a>(
         match center_mode {
             CenterMode::Mean => (),
             CenterMode::Median => {
-                sliding_weighted_median(padded, mode_buffer.view_mut(), kernel.view());
+                sliding_median(padded, mode_buffer.view_mut(), kernel.view());
             }
         }
 

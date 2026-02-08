@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "rsliding"
+name = "_rsliding"
 crate-type = ["cdylib"]
 path = "lib.rs"
 

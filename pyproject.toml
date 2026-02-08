@@ -18,3 +18,8 @@ classifiers = [
 # Use the Python bindings crate
 bindings = "pyo3"
 manifest-path = "rsliding_py/Cargo.toml"
+python-source = "python"
+python-packages = ["rsliding"]
+module-name = "rsliding._rsliding"
+include = ["python/**"]
+sdist-include = ["python/**"]

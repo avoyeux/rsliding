@@ -128,7 +128,7 @@ fn weights_all_equal(weights: &[f64]) -> bool {
 /// N-dimensional sliding **weighted** median operation.
 /// Uses kernel values as non-negative weights and ignores NaNs.
 /// Kernel entries equal to 0 act as a mask (weight 0).
-pub fn sliding_weighted_median<'a>(
+pub fn sliding_median<'a>(
     padded: &PaddingWorkspace,
     mut data: ArrayViewMutD<'a, f64>,
     kernel: ArrayViewD<'a, f64>,

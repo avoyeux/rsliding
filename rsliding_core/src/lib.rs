@@ -13,8 +13,8 @@ mod sliding_standard_deviation;
 pub use convolution::convolution;
 pub use padding::{PaddingMode, PaddingWorkspace};
 pub use sliding_mean::sliding_mean;
-pub use sliding_median::sliding_weighted_median;
-pub use sliding_sigma_clipping::sliding_sigma_clipping;
+pub use sliding_median::sliding_median;
+pub use sliding_sigma_clipping::{CenterMode, sliding_sigma_clipping};
 pub use sliding_standard_deviation::sliding_standard_deviation;
 
 #[cfg(test)]
@@ -157,7 +157,7 @@ mod tests {
             [0.5, 2.5, 3., 11. / 3.],
         ])
         .into_dyn();
-        assert_abs_diff_eq!(data, expected_mean, epsilon = 1e-8);
+        assert_abs_diff_eq!(mean_buffer, expected_mean, epsilon = 1e-8);
     }
 
     #[test]
@@ -168,7 +168,7 @@ mod tests {
         padded.pad_input(data.view());
 
         // compute
-        sliding_weighted_median(&padded, data.view_mut(), kernel.view());
+        sliding_median(&padded, data.view_mut(), kernel.view());
 
         // compare
         let expected_median = arr2(&[
@@ -184,17 +184,17 @@ mod tests {
     #[test]
     fn check_median_nan() {
         let (mut data, kernel) = own_data();
-        let pad_mode = PaddingMode::Constant(0.);
+        let pad_mode = PaddingMode::Constant(f64::NAN);
         let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
         padded.pad_input(data.view());
 
         // compute
-        sliding_weighted_median(&padded, data.view_mut(), kernel.view());
+        sliding_median(&padded, data.view_mut(), kernel.view());
 
         // compare
         let expected_median = arr2(&[
             [3., 2., 2.5, 2.5],
-            [3., 3., 3., 2.],
+            [2., 3., 3., 2.],
             [1.5, 2., 3., 4.],
             [0.5, 2., 3.5, 3.],
         ])
