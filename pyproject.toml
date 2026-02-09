@@ -1,25 +1,44 @@
 [build-system]
-requires = ["maturin>=1.5"]
+requires = ["maturin>=1.5,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "rsliding"         # package name on PyPI
+name = "rsliding"
 version = "0.1.0"
-requires-python = ">=3.9"
-description = "Fast sliding window operations implemented in Rust"
-authors = [{ name = "You", email = "you@example.com" }]
+description = "NumPy-friendly sliding window ops backed by Rust"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Your Name", email = "you@example.com" }]
 classifiers = [
-  "Programming Language :: Python",
-  "Programming Language :: Rust",
-  "Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: Implementation :: CPython",
+	"Programming Language :: Rust",
+	"Typing :: Typed",
 ]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+dev = ["mypy>=1.8", "ruff>=0.3", "pytest>=8.0"]
 
 [tool.maturin]
-# Use the Python bindings crate
 bindings = "pyo3"
-manifest-path = "rsliding_py/Cargo.toml"
-python-source = "python"
-python-packages = ["rsliding"]
-module-name = "rsliding._rsliding"
-include = ["python/**"]
-sdist-include = ["python/**"]
+manifest-path = "rust/Cargo.toml"
+module-name = "rsliding._bindings"
+python-source = "python/src"
+strip = true
+sdist-include = [
+	"python/src/rsliding/py.typed",
+	"python/src/rsliding/_bindings.pyi",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["python/src"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = ["python/src"]
+warn_unused_ignores = true
+warn_return_any = true
+check_untyped_defs = true

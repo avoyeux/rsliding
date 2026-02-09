@@ -1,0 +1,17 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "_bindings"
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+approx = "0.5.1"
+ndarray = {version="0.17.2", features = ["approx"]}
+num-traits = "0.2.19"
+rayon = "1.11.0"
+pyo3 = { version = "0.21", features = ["extension-module"] }
+numpy = "0.21"                  # for NumPy <-> ndarray conversion

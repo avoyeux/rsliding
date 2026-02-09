@@ -4,7 +4,7 @@ use ndarray::{ArrayViewD, ArrayViewMutD, IxDyn};
 use std::cmp::Ordering;
 
 // local
-use crate::padding::PaddingWorkspace;
+use crate::core::padding::PaddingWorkspace;
 
 /// Select the (unweighted) median using partitioning.
 /// For an even number of elements, returns the average of the two middle values.

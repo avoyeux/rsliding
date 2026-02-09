@@ -1,0 +1,31 @@
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "rsliding"
+version = "0.1.0"
+description = "NumPy-friendly sliding window ops backed by Rust"
+requires-python = ">=3.10"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Rust",
+    "Typing :: Typed",
+]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+dev = ["mypy>=1.8", "ruff>=0.3", "pytest>=8.0"]
+
+[tool.maturin]
+bindings = "pyo3"
+manifest-path = "../rust/Cargo.toml"
+module-name = "rsliding._bindings"
+python-source = "src"
+strip = true
+sdist-include = [
+    "src/rsliding/py.typed",
+    "src/rsliding/_bindings.pyi",
+]

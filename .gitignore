@@ -2,17 +2,20 @@
 *
 
 # DIRs whitelisted
-!rsliding_core/
-!rsliding_core/**/
-!rsliding_py/
-!rsliding_py/**/
+!rust/
+!rust/**/
+!python/
+!python/**/
 
 # TYPEs whitelist
 !**/*.rs
+!**/*.py
+!**/*.pyi
 !**/*.md
 !**/*.yml
 !**/*.txt
 !**/*.toml
+!**/*.typed
 
 # BLACKLIST specific dirs
 **/.*/

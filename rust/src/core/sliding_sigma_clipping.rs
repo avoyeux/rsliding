@@ -3,9 +3,9 @@
 use ndarray::{ArrayD, ArrayViewD, ArrayViewMutD, Zip};
 
 // local
-use crate::padding::PaddingWorkspace;
-use crate::sliding_median::sliding_median;
-use crate::sliding_standard_deviation::sliding_standard_deviation;
+use crate::core::padding::PaddingWorkspace;
+use crate::core::sliding_median::sliding_median;
+use crate::core::sliding_standard_deviation::sliding_standard_deviation;
 
 pub enum CenterMode {
     Mean,

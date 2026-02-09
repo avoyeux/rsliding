@@ -3,7 +3,7 @@
 use ndarray::{ArrayViewD, ArrayViewMutD, IxDyn};
 
 // local
-use crate::padding::PaddingWorkspace;
+use crate::core::padding::PaddingWorkspace;
 
 /// N-dimensional sliding mean operation.
 /// Handles NaN values by ignoring them in the mean calculation.

@@ -3,7 +3,7 @@
 use ndarray::{ArrayViewD, ArrayViewMutD, IxDyn};
 
 // local
-use crate::padding::PaddingWorkspace;
+use crate::core::padding::PaddingWorkspace;
 
 /// N-dimensional convolution for a kernel with weights and an input array with NaNs.
 /// The NaN values in the input are ignored in the convolution operation.

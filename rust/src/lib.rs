@@ -1,21 +1,43 @@
 //! 'sliding' library containing different sliding window operations.
 //! Done to replace the 'sliding' python library that I had created before.
 
+use pyo3::prelude::*;
+
 // Local modules
-mod convolution;
-mod padding;
-mod sliding_mean;
-mod sliding_median;
-mod sliding_sigma_clipping;
-mod sliding_standard_deviation;
+mod bindings;
+mod core;
 
 // Re-exports
-pub use convolution::convolution;
-pub use padding::{PaddingMode, PaddingWorkspace};
-pub use sliding_mean::sliding_mean;
-pub use sliding_median::sliding_median;
-pub use sliding_sigma_clipping::{CenterMode, sliding_sigma_clipping};
-pub use sliding_standard_deviation::sliding_standard_deviation;
+pub use core::convolution::convolution;
+pub use core::padding::{PaddingMode, PaddingWorkspace};
+pub use core::sliding_mean::sliding_mean;
+pub use core::sliding_median::sliding_median;
+pub use core::sliding_sigma_clipping::{CenterMode, sliding_sigma_clipping};
+pub use core::sliding_standard_deviation::sliding_standard_deviation;
+
+// Python bindings
+#[pymodule]
+fn _bindings(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(bindings::padding::py_padding, m)?)?;
+    m.add_function(wrap_pyfunction!(bindings::convolution::py_convolution, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        bindings::sliding_mean::py_sliding_mean,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        bindings::sliding_median::py_sliding_median,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        bindings::sliding_standard_deviation::py_sliding_standard_deviation,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        bindings::sliding_sigma_clipping::py_sliding_sigma_clipping,
+        m
+    )?)?;
+    Ok(())
+}
 
 #[cfg(test)]
 mod tests {

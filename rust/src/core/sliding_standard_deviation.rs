@@ -3,7 +3,7 @@
 use ndarray::{ArrayViewD, ArrayViewMutD, IxDyn};
 
 // local
-use crate::padding::PaddingWorkspace;
+use crate::core::padding::PaddingWorkspace;
 
 /// N-dimensional sliding standard deviation
 /// also keeps the sliding mean as it might be chosen for the sigma clipping
