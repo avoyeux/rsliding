@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 
 // local
 use crate::bindings::utils::{array_d_to_py_array, py_array_to_array_d};
-use crate::core::padding::{PaddingMode, PaddingWorkspace};
+use crate::core::padding::{PaddingMode, SlidingWorkspace};
 
 /// Pad an N-dimensional array according to the specified kernel shape and padding value.
 ///
@@ -29,7 +29,7 @@ pub fn py_padding<'py>(
 
     // pad
     let pad_mode = PaddingMode::Constant(pad_value);
-    let mut padded = PaddingWorkspace::new(data_arr.shape(), kernel_arr.shape(), pad_mode).unwrap();
+    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, pad_mode).unwrap();
     padded.pad_input(data_arr.view());
 
     // return the padded buffer as a new array

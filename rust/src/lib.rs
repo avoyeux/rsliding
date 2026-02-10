@@ -9,7 +9,7 @@ mod core;
 
 // Re-exports
 pub use core::convolution::convolution;
-pub use core::padding::{PaddingMode, PaddingWorkspace};
+pub use core::padding::{PaddingMode, SlidingWorkspace};
 pub use core::sliding_mean::sliding_mean;
 pub use core::sliding_median::sliding_median;
 pub use core::sliding_sigma_clipping::{CenterMode, sliding_sigma_clipping};
@@ -76,11 +76,11 @@ mod tests {
 
     #[test]
     fn check_dims() {
-        let input_shape = [5, 5];
-        let kernel_shape = [3, 3];
+        let (data, kernel) = own_data();
+        let input_shape = data.shape();
         let pad_mode = PaddingMode::Constant(0.);
 
-        let padded = PaddingWorkspace::new(&input_shape, &kernel_shape, pad_mode).unwrap();
+        let padded = SlidingWorkspace::new(&input_shape, kernel, pad_mode).unwrap();
         assert_eq!(padded.ndim, 2);
     }
 
@@ -89,11 +89,11 @@ mod tests {
         // prepare data
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
-        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
         padded.pad_input(data.view());
 
         // compute
-        sliding_mean(&padded, data.view_mut(), kernel.view());
+        sliding_mean(&mut padded, data.view_mut());
 
         // compare
         let expected_mean = arr2(&[
@@ -111,11 +111,11 @@ mod tests {
         // prepare data
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(f64::NAN);
-        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
         padded.pad_input(data.view());
 
         // compute
-        sliding_mean(&padded, data.view_mut(), kernel.view());
+        sliding_mean(&mut padded, data.view_mut());
 
         // compare
         let expected_mean = arr2(&[
@@ -132,17 +132,12 @@ mod tests {
     fn check_mean_std_zero() {
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
-        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
         padded.pad_input(data.view());
 
         // compute
-        let mut mean_buffer = ArrayD::zeros(padded.valid_shape.clone());
-        sliding_standard_deviation(
-            &padded,
-            data.view_mut(),
-            mean_buffer.view_mut(),
-            kernel.view(),
-        );
+        let mut mean_buffer = ArrayD::zeros(data.shape());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
 
         // compare
         let expected_mean = arr2(&[
@@ -159,17 +154,12 @@ mod tests {
     fn check_mean_std_nan() {
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(f64::NAN);
-        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
         padded.pad_input(data.view());
 
         // compute
-        let mut mean_buffer = ArrayD::zeros(padded.valid_shape.clone());
-        sliding_standard_deviation(
-            &padded,
-            data.view_mut(),
-            mean_buffer.view_mut(),
-            kernel.view(),
-        );
+        let mut mean_buffer = ArrayD::zeros(data.shape());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
 
         // compare
         let expected_mean = arr2(&[
@@ -186,11 +176,11 @@ mod tests {
     fn check_median_zero() {
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
-        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
         padded.pad_input(data.view());
 
         // compute
-        sliding_median(&padded, data.view_mut(), kernel.view());
+        sliding_median(&mut padded, data.view_mut());
 
         // compare
         let expected_median = arr2(&[
@@ -207,11 +197,11 @@ mod tests {
     fn check_median_nan() {
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(f64::NAN);
-        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
         padded.pad_input(data.view());
 
         // compute
-        sliding_median(&padded, data.view_mut(), kernel.view());
+        sliding_median(&mut padded, data.view_mut());
 
         // compare
         let expected_median = arr2(&[
@@ -229,17 +219,12 @@ mod tests {
         // prepare data
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
-        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
         padded.pad_input(data.view());
 
         // compute
-        let mut mean_buffer = ArrayD::zeros(padded.valid_shape.clone());
-        sliding_standard_deviation(
-            &padded,
-            data.view_mut(),
-            mean_buffer.view_mut(),
-            kernel.view(),
-        );
+        let mut mean_buffer = ArrayD::zeros(data.shape());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
 
         // compare
         let std_0_0 = std_population(&[0., 0., 0., 0., 0., 2., 3., 5.]);
@@ -273,17 +258,12 @@ mod tests {
         // prepare data
         let (mut data, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(f64::NAN);
-        let mut padded = PaddingWorkspace::new(data.shape(), kernel.shape(), pad_mode).unwrap();
+        let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
         padded.pad_input(data.view());
 
         // compute
-        let mut mean_buffer = ArrayD::zeros(padded.valid_shape.clone());
-        sliding_standard_deviation(
-            &padded,
-            data.view_mut(),
-            mean_buffer.view_mut(),
-            kernel.view(),
-        );
+        let mut mean_buffer = ArrayD::zeros(data.shape());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
 
         // compare
         let std_0_0 = std_population(&[2., 3., 5.]);

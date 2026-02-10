@@ -1,10 +1,10 @@
 //! N-dimensional sliding median operation for arrays with possible NaN values.
 
-use ndarray::{ArrayViewD, ArrayViewMutD, IxDyn};
+use ndarray::ArrayViewMutD;
 use std::cmp::Ordering;
 
 // local
-use crate::core::padding::PaddingWorkspace;
+use crate::core::padding::SlidingWorkspace;
 
 /// Select the (unweighted) median using partitioning.
 /// For an even number of elements, returns the average of the two middle values.
@@ -128,50 +128,74 @@ fn weights_all_equal(weights: &[f64]) -> bool {
 /// N-dimensional sliding **weighted** median operation.
 /// Uses kernel values as non-negative weights and ignores NaNs.
 /// Kernel entries equal to 0 act as a mask (weight 0).
-pub fn sliding_median<'a>(
-    padded: &PaddingWorkspace,
-    mut data: ArrayViewMutD<'a, f64>,
-    kernel: ArrayViewD<'a, f64>,
-) {
-    let mut padded_idx = vec![0usize; padded.ndim];
-    let kernel_raw_dim = kernel.raw_dim();
+pub fn sliding_median<'a>(padded: &mut SlidingWorkspace, mut data: ArrayViewMutD<'a, f64>) {
+    padded.idx.fill(0);
 
-    let kernel_len = kernel.len();
-    let mut values: Vec<f64> = Vec::with_capacity(kernel_len);
-    let mut weights: Vec<f64> = Vec::with_capacity(kernel_len);
+    let padded_slice = padded
+        .padded_buffer
+        .as_slice_memory_order()
+        .expect("Padding buffer must be contiguous");
+    let out_slice = data
+        .as_slice_memory_order_mut()
+        .expect("Output view must be contiguous");
 
-    for input_idx in ndarray::indices(padded.valid_shape.clone()) {
-        values.clear();
-        weights.clear();
+    let k_offsets = &padded.kernel_offsets;
+    let k_weights = &padded.kernel_weights;
+    assert_eq!(k_offsets.len(), k_weights.len());
 
-        for k_idx in ndarray::indices(kernel_raw_dim.clone()) {
-            for d in 0..padded.ndim {
-                padded_idx[d] = input_idx[d] + k_idx[d];
+    let pstrides = padded.padded_buffer.strides();
+
+    let mut window_vals = Vec::with_capacity(k_offsets.len());
+    let mut window_weights = Vec::with_capacity(k_offsets.len());
+
+    let mut base = 0isize;
+    let mut out_linear = 0usize;
+
+    loop {
+        window_vals.clear();
+        window_weights.clear();
+
+        for i in 0..k_offsets.len() {
+            let w = k_weights[i];
+            if w == 0.0 {
+                continue;
             }
-
-            unsafe {
-                let input_val = *padded.padded_buffer.uget(IxDyn(&padded_idx));
-                let kernel_val = *kernel.uget(k_idx);
-
-                if !input_val.is_nan() && kernel_val > 0.0 {
-                    values.push(input_val);
-                    weights.push(kernel_val);
-                }
+            let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
+            if v.is_nan() {
+                continue;
             }
+            window_vals.push(v);
+            window_weights.push(w);
         }
 
-        let median = if values.is_empty() {
+        let median = if window_vals.is_empty() {
             f64::NAN
-        } else if weights_all_equal(&weights) {
-            // All (positive) weights equal -> fall back to standard sample median,
-            // which for even counts returns the average of the two middle values.
-            median_partition(&mut values)
+        } else if weights_all_equal(&window_weights) {
+            median_partition(&mut window_vals)
         } else {
-            weighted_median_partition(&mut values, &mut weights)
+            weighted_median_partition(&mut window_vals, &mut window_weights)
         };
 
-        unsafe {
-            *data.uget_mut(input_idx) = median;
+        out_slice[out_linear] = median;
+        out_linear += 1;
+
+        // advance N-D index just like in sliding_mean
+        let mut d = padded.ndim;
+        loop {
+            if d == 0 {
+                return;
+            }
+            d -= 1;
+
+            padded.idx[d] += 1;
+            base += pstrides[d];
+
+            if padded.idx[d] < padded.out_shape[d] {
+                break;
+            }
+
+            padded.idx[d] = 0;
+            base -= (padded.out_shape[d] as isize) * pstrides[d];
         }
     }
 }

@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 
 // local
 use crate::bindings::utils::{array_d_to_py_array, py_array_to_array_d};
-use crate::core::padding::{PaddingMode, PaddingWorkspace};
+use crate::core::padding::{PaddingMode, SlidingWorkspace};
 use crate::core::sliding_median::sliding_median;
 
 /// N-dimensional sliding median of an input array with a kernel.
@@ -38,10 +38,10 @@ pub fn py_sliding_median<'py>(
 
     // pad
     let pad_mode = PaddingMode::Constant(pad_value);
-    let mut padded = PaddingWorkspace::new(data_arr.shape(), kernel_arr.shape(), pad_mode).unwrap();
+    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, pad_mode).unwrap();
     padded.pad_input(data_arr.view());
 
     // sliding median
-    sliding_median(&padded, data_arr.view_mut(), kernel_arr.view());
+    sliding_median(&mut padded, data_arr.view_mut());
     array_d_to_py_array(py, data_arr)
 }

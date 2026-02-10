@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 # todo update this when all padding options are added inside the rust code.
-
+# todo update docstring and/or decide for the contiguous
 
 
 def padding(
@@ -37,6 +37,9 @@ def padding(
     Returns:
         npt.NDArray[np.float64]: the padded array.
     """
+    # CONTIGUOUS
+    data = np.ascontiguousarray(data)
+    kernel = np.ascontiguousarray(kernel)
     return _rust.padding(data, kernel, pad_value)
 
 def convolution(

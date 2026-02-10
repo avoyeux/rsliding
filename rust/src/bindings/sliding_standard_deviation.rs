@@ -6,7 +6,7 @@ use pyo3::prelude::*;
 
 // local
 use crate::bindings::utils::{array_d_to_py_array, py_array_to_array_d};
-use crate::core::padding::{PaddingMode, PaddingWorkspace};
+use crate::core::padding::{PaddingMode, SlidingWorkspace};
 use crate::core::sliding_standard_deviation::sliding_standard_deviation;
 
 /// N-dimensional sliding standard deviation of an input array with a kernel.
@@ -40,17 +40,12 @@ pub fn py_sliding_standard_deviation<'py>(
 
     // pad
     let pad_mode = PaddingMode::Constant(pad_value);
-    let mut padded = PaddingWorkspace::new(data_arr.shape(), kernel_arr.shape(), pad_mode).unwrap();
+    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, pad_mode).unwrap();
     padded.pad_input(data_arr.view());
-    let mut mean_buffer = ArrayD::zeros(padded.valid_shape.clone());
+    let mut mean_buffer = ArrayD::zeros(data_arr.shape());
 
     // sliding standard deviation
-    sliding_standard_deviation(
-        &padded,
-        data_arr.view_mut(),
-        mean_buffer.view_mut(),
-        kernel_arr.view(),
-    );
+    sliding_standard_deviation(&mut padded, data_arr.view_mut(), mean_buffer.view_mut());
     let standard_deviation = array_d_to_py_array(py, data_arr)?;
     let mean = array_d_to_py_array(py, mean_buffer)?;
     Ok((standard_deviation, mean))

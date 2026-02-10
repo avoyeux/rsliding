@@ -6,7 +6,7 @@ use pyo3::prelude::*;
 // local
 use crate::bindings::utils::{array_d_to_py_array, py_array_to_array_d};
 use crate::core::convolution::convolution;
-use crate::core::padding::{PaddingMode, PaddingWorkspace};
+use crate::core::padding::{PaddingMode, SlidingWorkspace};
 
 /// Compute the N-dimensional convolution of an input array with a kernel.
 /// NaN values in the input are ignored in the convolution operation.
@@ -38,10 +38,10 @@ pub fn py_convolution<'py>(
 
     // pad
     let pad_mode = PaddingMode::Constant(pad_value);
-    let mut padded = PaddingWorkspace::new(data_arr.shape(), kernel_arr.shape(), pad_mode).unwrap();
+    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, pad_mode).unwrap();
     padded.pad_input(data_arr.view());
 
     // convolution
-    convolution(&padded, data_arr.view_mut(), kernel_arr.view());
+    convolution(&mut padded, data_arr.view_mut());
     array_d_to_py_array(py, data_arr)
 }

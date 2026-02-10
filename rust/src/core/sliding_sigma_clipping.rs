@@ -3,7 +3,7 @@
 use ndarray::{ArrayD, ArrayViewD, ArrayViewMutD, Zip};
 
 // local
-use crate::core::padding::PaddingWorkspace;
+use crate::core::padding::SlidingWorkspace;
 use crate::core::sliding_median::sliding_median;
 use crate::core::sliding_standard_deviation::sliding_standard_deviation;
 
@@ -13,9 +13,8 @@ pub enum CenterMode {
 }
 
 pub fn sliding_sigma_clipping<'a>(
-    padded: &mut PaddingWorkspace,
+    padded: &mut SlidingWorkspace,
     mut data: ArrayViewMutD<'a, f64>,
-    kernel: ArrayViewD<'a, f64>,
     sigma_upper: &Option<f64>,
     sigma_lower: &Option<f64>,
     center_mode: &CenterMode,
@@ -28,18 +27,13 @@ pub fn sliding_sigma_clipping<'a>(
 
     loop {
         // std
-        sliding_standard_deviation(
-            padded,
-            std_buffer.view_mut(),
-            mode_buffer.view_mut(),
-            kernel.view(),
-        );
+        sliding_standard_deviation(padded, std_buffer.view_mut(), mode_buffer.view_mut());
 
         // center
         match center_mode {
             CenterMode::Mean => (),
             CenterMode::Median => {
-                sliding_median(padded, mode_buffer.view_mut(), kernel.view());
+                sliding_median(padded, mode_buffer.view_mut());
             }
         }
 

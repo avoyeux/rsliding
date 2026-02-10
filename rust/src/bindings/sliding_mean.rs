@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 
 // local
 use crate::bindings::utils::{array_d_to_py_array, py_array_to_array_d};
-use crate::core::padding::{PaddingMode, PaddingWorkspace};
+use crate::core::padding::{PaddingMode, SlidingWorkspace};
 use crate::core::sliding_mean::sliding_mean;
 
 /// N-dimensional sliding mean of an input array with a kernel.
@@ -33,10 +33,10 @@ pub fn py_sliding_mean<'py>(
 
     // pad
     let pad_mode = PaddingMode::Constant(pad_value);
-    let mut padded = PaddingWorkspace::new(data_arr.shape(), kernel_arr.shape(), pad_mode).unwrap();
+    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, pad_mode).unwrap();
     padded.pad_input(data_arr.view());
 
     // sliding mean
-    sliding_mean(&padded, data_arr.view_mut(), kernel_arr.view());
+    sliding_mean(&mut padded, data_arr.view_mut());
     array_d_to_py_array(py, data_arr)
 }
