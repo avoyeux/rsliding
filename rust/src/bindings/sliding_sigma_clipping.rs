@@ -43,14 +43,26 @@ pub fn py_sliding_sigma_clipping<'py>(
     sigma_lower: f64,
     center_mode: &str,
     max_iterations: usize,
+    pad_mode: &str,
     pad_value: f64,
 ) -> PyResult<Bound<'py, PyArrayDyn<f64>>> {
     let mut data_arr = py_array_to_array_d(&data)?;
     let kernel_arr = py_array_to_array_d(&kernel)?;
 
     // pad
-    let pad_mode = PaddingMode::Constant(pad_value);
-    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, pad_mode).unwrap();
+    let padding_mode = match pad_mode {
+        "constant" => PaddingMode::Constant(pad_value),
+        "reflect" => PaddingMode::Reflect,
+        "replicate" => PaddingMode::Replicate,
+        _ => {
+            let args = format!(
+                "Invalid padding mode: {}. Must be one of 'constant', 'reflect', 'replicate', or 'wrap'.",
+                pad_mode,
+            );
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(args));
+        }
+    };
+    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, padding_mode).unwrap();
     padded.pad_input(data_arr.view());
 
     let center_mode = match center_mode {

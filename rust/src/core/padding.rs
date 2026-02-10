@@ -1,7 +1,7 @@
-//! Paddding (change the filename to padding.rs later)
+//! Implements the workspace for all sliding operations.
+//! Done this way to avoid allocations and redundant calculations.
 use ndarray::{ArrayD, ArrayViewD, Axis, IxDyn, Slice};
 
-// todo see if strides implementation is needed later
 // todo add proper padding mode implementation
 // todo update/change all docstring
 
@@ -9,7 +9,6 @@ pub enum PaddingMode {
     Constant(f64),
     Reflect,
     Replicate,
-    Wrap,
 }
 
 pub struct SlidingWorkspace {
@@ -102,21 +101,99 @@ impl SlidingWorkspace {
         match self.padding_mode {
             PaddingMode::Constant(value) => {
                 if !self.filled {
-                    self.padded_buffer.fill(value)
+                    self.padded_buffer.fill(value);
+                    self.filled = true; // only fill once since constant padding
                 }
             }
-            _ => panic!("Mode not added yet"),
+            _ => (), // other padding choices are done when data is already in the buffer.
         }
-        self.filled = true;
 
-        let input_shape = input.shape();
         let mut window = self.padded_buffer.view_mut();
         for (axis, p) in self.pad.iter().enumerate() {
             let start = *p as isize;
-            let end = start + input_shape[axis] as isize;
+            let end = start + self.out_shape[axis] as isize;
             window = window.slice_axis_move(Axis(axis), Slice::from(start..end));
         }
         window.assign(&input);
+
+        // padding
+        match self.padding_mode {
+            PaddingMode::Constant(_) => (), // already done
+            PaddingMode::Reflect => self.fill_reflect(),
+            PaddingMode::Replicate => self.fill_replicate(),
+        }
+    }
+
+    fn fill_reflect(&mut self) {
+        for axis_idx in 0..self.ndim {
+            let pad = self.pad[axis_idx];
+            if pad == 0 {
+                continue;
+            }
+
+            let core_len = self.out_shape[axis_idx];
+            let axis = Axis(axis_idx);
+            let padded = self.padded_buffer.view_mut();
+            let (mut left_pad, tail) = padded.split_at(axis, pad);
+            let (core, mut right_pad) = tail.split_at(axis, core_len);
+
+            for offset in 0..pad {
+                let src_idx = Self::even_mirror_index(offset, core_len);
+                let dst_idx = pad - 1 - offset;
+                let src = core.index_axis(axis, src_idx);
+                let mut dst = left_pad.index_axis_mut(axis, dst_idx);
+                dst.assign(&src);
+            }
+
+            for offset in 0..pad {
+                let src_idx = core_len - 1 - Self::even_mirror_index(offset, core_len);
+                let dst_idx = offset;
+                let src = core.index_axis(axis, src_idx);
+                let mut dst = right_pad.index_axis_mut(axis, dst_idx);
+                dst.assign(&src);
+            }
+        }
+    }
+
+    #[inline]
+    fn even_mirror_index(distance: usize, len: usize) -> usize {
+        if len <= 1 {
+            return 0;
+        }
+        let period = 2 * len - 2;
+        let mut d = distance % period;
+        if d >= len {
+            d = period - d;
+        }
+        d
+    }
+
+    fn fill_replicate(&mut self) {
+        for axis_idx in 0..self.ndim {
+            let pad = self.pad[axis_idx];
+            if pad == 0 {
+                continue;
+            }
+
+            let core_len = self.out_shape[axis_idx];
+            let axis = Axis(axis_idx);
+            let padded = self.padded_buffer.view_mut();
+            let (mut left_pad, tail) = padded.split_at(axis, pad);
+            let (core, mut right_pad) = tail.split_at(axis, core_len);
+
+            let left_edge = core.index_axis(axis, 0);
+            let right_edge = core.index_axis(axis, core_len - 1);
+
+            for i in 0..pad {
+                let mut dst = left_pad.index_axis_mut(axis, i);
+                dst.assign(&left_edge);
+            }
+
+            for i in 0..pad {
+                let mut dst = right_pad.index_axis_mut(axis, i);
+                dst.assign(&right_edge);
+            }
+        }
     }
 
     fn create_offsets(&mut self) {
@@ -165,6 +242,5 @@ impl SlidingWorkspace {
                 break;
             }
         }
-        self.idx.fill(0);
     }
 }

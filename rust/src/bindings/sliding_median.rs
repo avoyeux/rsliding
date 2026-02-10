@@ -31,14 +31,26 @@ pub fn py_sliding_median<'py>(
     py: Python<'py>,
     data: PyReadonlyArrayDyn<'py, f64>,
     kernel: PyReadonlyArrayDyn<'py, f64>,
+    pad_mode: &str,
     pad_value: f64,
 ) -> PyResult<Bound<'py, PyArrayDyn<f64>>> {
     let mut data_arr = py_array_to_array_d(&data)?;
     let kernel_arr = py_array_to_array_d(&kernel)?;
 
     // pad
-    let pad_mode = PaddingMode::Constant(pad_value);
-    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, pad_mode).unwrap();
+    let padding_mode = match pad_mode {
+        "constant" => PaddingMode::Constant(pad_value),
+        "reflect" => PaddingMode::Reflect,
+        "replicate" => PaddingMode::Replicate,
+        _ => {
+            let args = format!(
+                "Invalid padding mode: {}. Must be one of 'constant', 'reflect', 'replicate', or 'wrap'.",
+                pad_mode,
+            );
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(args));
+        }
+    };
+    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, padding_mode).unwrap();
     padded.pad_input(data_arr.view());
 
     // sliding median
