@@ -2,7 +2,6 @@
 //! Done this way to avoid allocations and redundant calculations.
 use ndarray::{ArrayD, ArrayViewD, Axis, IxDyn, Slice};
 
-// todo add proper padding mode implementation
 // todo update/change all docstring
 
 pub enum PaddingMode {
