@@ -11,16 +11,14 @@ pub enum PaddingMode {
 }
 
 pub struct SlidingWorkspace {
-    pub ndim: usize,                // number of dimensions
-    pad: Vec<usize>,                // per-dimension padding
-    padding_mode: PaddingMode,      // padding mode
     pub padded_buffer: ArrayD<f64>, // reused by padding operations
-    pub out_shape: Vec<usize>,      // shape of the output
-    kernel_shape: Vec<usize>,       // shape of the kernel
-    pub idx: Vec<usize>,
-    kernel: ArrayD<f64>,
     pub kernel_offsets: Vec<isize>,
     pub kernel_weights: Vec<f64>,
+    ndim: usize,               // number of dimensions
+    pad: Vec<usize>,           // per-dimension padding
+    padding_mode: PaddingMode, // padding mode
+    out_shape: Vec<usize>,     // shape of the output
+    kernel: ArrayD<f64>,
     filled: bool,
 }
 
@@ -46,8 +44,6 @@ impl SlidingWorkspace {
                 .as_slice(),
         );
         let out_shape = input_shape.to_vec();
-        let kernel_shape = kernel.shape().to_vec();
-        let idx = vec![0usize; ndim];
 
         // kernel offsets and weights (skip zeros)
         let kernel_slice = kernel
@@ -62,8 +58,6 @@ impl SlidingWorkspace {
             padding_mode,
             padded_buffer: ArrayD::zeros(padded_shape),
             out_shape,
-            kernel_shape,
-            idx,
             kernel,
             kernel_offsets,
             kernel_weights,
@@ -71,26 +65,6 @@ impl SlidingWorkspace {
         };
         instance.create_offsets();
         Ok(instance)
-    }
-
-    /// Check if the kernel is valid for the given data.
-    /// # Errors
-    /// Returns an error if the kernel is not valid.
-    fn check_kernel(input_shape: &[usize], kernel_shape: &[usize]) -> Result<(), String> {
-        // todo add checks if zero or negative values
-
-        // dims
-        if input_shape.len() != kernel_shape.len() {
-            return Err("Data and kernel must have the same number of dimensions.".to_string());
-        }
-
-        // odd values
-        for &dim in kernel_shape {
-            if dim % 2 == 0 {
-                return Err("Kernel dimensions must be odd.".to_string());
-            }
-        }
-        Ok(())
     }
 
     /// Pad the input data into the padded buffer.
@@ -121,6 +95,40 @@ impl SlidingWorkspace {
             PaddingMode::Reflect => self.fill_reflect(),
             PaddingMode::Replicate => self.fill_replicate(),
         }
+    }
+
+    #[inline]
+    pub fn base_offset_from_linear(&self, mut linear: usize, padded_strides: &[isize]) -> isize {
+        let out_shape = &self.out_shape;
+        let mut base = 0isize;
+
+        for d in (0..out_shape.len()).rev() {
+            let dim = out_shape[d];
+            let idx = linear % dim;
+            linear /= dim;
+            base += (idx as isize) * padded_strides[d];
+        }
+        base
+    }
+
+    /// Check if the kernel is valid for the given data.
+    /// # Errors
+    /// Returns an error if the kernel is not valid.
+    fn check_kernel(input_shape: &[usize], kernel_shape: &[usize]) -> Result<(), String> {
+        // todo add checks if zero or negative values
+
+        // dims
+        if input_shape.len() != kernel_shape.len() {
+            return Err("Data and kernel must have the same number of dimensions.".to_string());
+        }
+
+        // odd values
+        for &dim in kernel_shape {
+            if dim % 2 == 0 {
+                return Err("Kernel dimensions must be odd.".to_string());
+            }
+        }
+        Ok(())
     }
 
     fn fill_reflect(&mut self) {
@@ -196,6 +204,8 @@ impl SlidingWorkspace {
     }
 
     fn create_offsets(&mut self) {
+        let mut idx = vec![0usize; self.ndim];
+        let kernel_shape = self.kernel.shape().to_vec();
         let padded_strides = self.padded_buffer.strides();
         let kernel_strides = self.kernel.strides();
         let kernel_slice = self
@@ -212,7 +222,7 @@ impl SlidingWorkspace {
                 // padded offset
                 let mut offset = 0isize;
                 for d in 0..self.ndim {
-                    offset += (self.idx[d] as isize) * padded_strides[d];
+                    offset += (idx[d] as isize) * padded_strides[d];
                 }
                 self.kernel_offsets.push(offset);
                 self.kernel_weights.push(weight);
@@ -223,21 +233,21 @@ impl SlidingWorkspace {
             loop {
                 d -= 1;
 
-                self.idx[d] += 1;
+                idx[d] += 1;
                 kernel_base += kernel_strides[d];
 
-                if self.idx[d] < self.kernel_shape[d] {
+                if idx[d] < kernel_shape[d] {
                     break;
                 }
 
-                self.idx[d] = 0;
-                kernel_base -= (self.kernel_shape[d] as isize) * kernel_strides[d];
+                idx[d] = 0;
+                kernel_base -= (kernel_shape[d] as isize) * kernel_strides[d];
                 if d == 0 {
                     break;
                 }
             }
 
-            if self.idx.iter().all(|&x| x == 0) {
+            if idx.iter().all(|&x| x == 0) {
                 break;
             }
         }

@@ -52,6 +52,7 @@ def convolution(
         kernel: npt.NDArray[np.float64],
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        threads: int | None = None,
     ) -> npt.NDArray[np.float64]:
     """
     N-dimensional convolution of a numpy float64 array given a kernel.
@@ -64,17 +65,19 @@ def convolution(
         kernel (npt.NDArray[np.float64]): the kernel used (can contain weights).
         pad_mode (Literal["constant", "reflect", "replicate"]): the padding mode to use.
         pad_value (float): the padding value to use.
-
+        threads (int | None, optional): the number of threads to use. If None, uses the number of
+            available CPU cores. Defaults to None.
     Returns:
         npt.NDArray[np.float64]: the convolution.
     """
-    return _rust.convolution(data, kernel, pad_mode, pad_value)
+    return _rust.convolution(data, kernel, pad_mode, pad_value, threads)
 
 def sliding_mean(
         data: npt.NDArray[np.float64],
         kernel: npt.NDArray[np.float64],
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        threads: int | None = None,
     ) -> npt.NDArray[np.float64]:
     """
     N-dimensional sliding mean of a numpy float64 array given a kernel.
@@ -87,17 +90,20 @@ def sliding_mean(
         kernel (npt.NDArray[np.float64]): the kernel used (can contain weights).
         pad_mode (Literal["constant", "reflect", "replicate"]): the padding mode to use.
         pad_value (float): the padding value to use.
+        threads (int | None, optional): the number of threads to use. If None, uses the number of
+            available CPU cores. Defaults to None.
 
     Returns:
         npt.NDArray[np.float64]: the sliding mean.
     """
-    return _rust.sliding_mean(data, kernel, pad_mode, pad_value)
+    return _rust.sliding_mean(data, kernel, pad_mode, pad_value, threads)
 
 def sliding_median(
         data: npt.NDArray[np.float64],
         kernel: npt.NDArray[np.float64],
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        threads: int | None = None,
     ) -> npt.NDArray[np.float64]:
     """
     N-dimensional sliding median of a numpy float64 array given a kernel.
@@ -110,17 +116,20 @@ def sliding_median(
         kernel (npt.NDArray[np.float64]): the kernel used (can contain weights).
         pad_mode (Literal["constant", "reflect", "replicate"]): the padding mode to use.
         pad_value (float): the padding value to use.
+        threads (int | None, optional): the number of threads to use. If None, uses the number of
+            available CPU cores. Defaults to None.
 
     Returns:
         npt.NDArray[np.float64]: the sliding median.
     """
-    return _rust.sliding_median(data, kernel, pad_mode, pad_value)
+    return _rust.sliding_median(data, kernel, pad_mode, pad_value, threads)
 
 def sliding_standard_deviation(
         data: npt.NDArray[np.float64],
         kernel: npt.NDArray[np.float64],
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        threads: int | None = None,
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """
     N-dimensional sliding standard deviation of a numpy float64 array given a kernel.
@@ -134,22 +143,25 @@ def sliding_standard_deviation(
         kernel (npt.NDArray[np.float64]): the kernel used (can contain weights).
         pad_mode (Literal["constant", "reflect", "replicate"]): the padding mode to use.
         pad_value (float): the padding value to use.
+        threads (int | None, optional): the number of threads to use. If None, uses the number of
+            available CPU cores. Defaults to None.
 
     Returns:
         tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: the sliding standard deviation and
             the sliding mean.
     """
-    return _rust.sliding_standard_deviation(data, kernel, pad_mode, pad_value)
+    return _rust.sliding_standard_deviation(data, kernel, pad_mode, pad_value, threads)
 
 def sliding_sigma_clipping(
         data: npt.NDArray[np.float64],
         kernel: npt.NDArray[np.float64],
-        sigma_upper: float,
-        sigma_lower: float,
         center_mode: str,
-        max_iterations: int,
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        sigma_upper: float | None,
+        sigma_lower: float | None,
+        max_iterations: int | None,
+        threads: int | None = None,
     ) -> npt.NDArray[np.float64]:
     """
     N-dimensional sliding sigma clipping of a numpy float64 array given a kernel
@@ -164,6 +176,8 @@ def sliding_sigma_clipping(
         max_iterations (int): _description_
         pad_mode (Literal["constant", "reflect", "replicate"]): the padding mode to use.
         pad_value (float): _description_
+        threads (int | None, optional): the number of threads to use. If None, uses the number of
+            available CPU cores. Defaults to None.
 
     Returns:
         npt.NDArray[np.float64]: _description_
@@ -172,11 +186,12 @@ def sliding_sigma_clipping(
     result = _rust.sliding_sigma_clipping(
         data,
         kernel,
-        sigma_upper,
-        sigma_lower,
         center_mode,
-        max_iterations,
         pad_mode,
         pad_value,
+        sigma_upper,
+        sigma_lower,
+        max_iterations,
+        threads,
     )
     return result

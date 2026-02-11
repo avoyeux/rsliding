@@ -1,6 +1,7 @@
 //! N-dimensional sliding median operation for arrays with possible NaN values.
 
 use ndarray::ArrayViewMutD;
+use rayon::prelude::*;
 use std::cmp::Ordering;
 
 // local
@@ -128,9 +129,8 @@ fn weights_all_equal(weights: &[f64]) -> bool {
 /// N-dimensional sliding **weighted** median operation.
 /// Uses kernel values as non-negative weights and ignores NaNs.
 /// Kernel entries equal to 0 act as a mask (weight 0).
-pub fn sliding_median<'a>(padded: &mut SlidingWorkspace, mut data: ArrayViewMutD<'a, f64>) {
-    padded.idx.fill(0);
-
+pub fn sliding_median<'a>(padded: &SlidingWorkspace, mut data: ArrayViewMutD<'a, f64>) {
+    let padded_strides = padded.padded_buffer.strides();
     let padded_slice = padded
         .padded_buffer
         .as_slice_memory_order()
@@ -141,61 +141,37 @@ pub fn sliding_median<'a>(padded: &mut SlidingWorkspace, mut data: ArrayViewMutD
 
     let k_offsets = &padded.kernel_offsets;
     let k_weights = &padded.kernel_weights;
-    assert_eq!(k_offsets.len(), k_weights.len());
 
-    let pstrides = padded.padded_buffer.strides();
+    out_slice
+        .par_iter_mut()
+        .enumerate()
+        .for_each(|(out_linear, out)| {
+            let base = padded.base_offset_from_linear(out_linear, padded_strides);
 
-    let mut window_vals = Vec::with_capacity(k_offsets.len());
-    let mut window_weights = Vec::with_capacity(k_offsets.len());
+            let mut window_vals = Vec::with_capacity(k_offsets.len());
+            let mut window_weights = Vec::with_capacity(k_offsets.len());
 
-    let mut base = 0isize;
-    let mut out_linear = 0usize;
-
-    loop {
-        window_vals.clear();
-        window_weights.clear();
-
-        for i in 0..k_offsets.len() {
-            let w = k_weights[i];
-            if w == 0.0 {
-                continue;
-            }
-            let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
-            if v.is_nan() {
-                continue;
-            }
-            window_vals.push(v);
-            window_weights.push(w);
-        }
-
-        let median = if window_vals.is_empty() {
-            f64::NAN
-        } else if weights_all_equal(&window_weights) {
-            median_partition(&mut window_vals)
-        } else {
-            weighted_median_partition(&mut window_vals, &mut window_weights)
-        };
-
-        out_slice[out_linear] = median;
-        out_linear += 1;
-
-        // advance N-D index just like in sliding_mean
-        let mut d = padded.ndim;
-        loop {
-            if d == 0 {
-                return;
-            }
-            d -= 1;
-
-            padded.idx[d] += 1;
-            base += pstrides[d];
-
-            if padded.idx[d] < padded.out_shape[d] {
-                break;
+            for i in 0..k_offsets.len() {
+                let w = k_weights[i];
+                if w == 0.0 {
+                    continue;
+                }
+                let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
+                if v.is_nan() {
+                    continue;
+                }
+                window_vals.push(v);
+                window_weights.push(w);
             }
 
-            padded.idx[d] = 0;
-            base -= (padded.out_shape[d] as isize) * pstrides[d];
-        }
-    }
+            let median = if window_vals.is_empty() {
+                f64::NAN
+            } else if weights_all_equal(&window_weights) {
+                median_partition(&mut window_vals)
+            } else {
+                weighted_median_partition(&mut window_vals, &mut window_weights)
+            };
+
+            *out = median;
+        });
 }

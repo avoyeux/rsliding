@@ -53,16 +53,8 @@ mod tests {
             [1.0, 0.0, 3.0, 4.0],
         ])
         .into_dyn();
-        let kernel1 = arr2(&[
-            [1.0, 1.0, 1.0],
-            [1.0, 0.0, 1.0],
-            [1.0, 1.0, 1.0],
-        ]).into_dyn();
-        let kernel2 = arr2(&[
-            [1.0, 0.0, 1.0],
-            [1.0, 1.0, 0.0],
-            [1.0, 1.0, 1.0],
-        ]).into_dyn();
+        let kernel1 = arr2(&[[1.0, 1.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0]]).into_dyn();
+        let kernel2 = arr2(&[[1.0, 0.0, 1.0], [1.0, 1.0, 0.0], [1.0, 1.0, 1.0]]).into_dyn();
         (data, kernel1, kernel2)
     }
 
@@ -81,16 +73,6 @@ mod tests {
             .sum::<f64>()
             / n as f64;
         var.sqrt()
-    }
-
-    #[test]
-    fn check_dims() {
-        let (data, kernel, _) = own_data();
-        let input_shape = data.shape();
-        let pad_mode = PaddingMode::Constant(0.);
-
-        let padded = SlidingWorkspace::new(&input_shape, kernel, pad_mode).unwrap();
-        assert_eq!(padded.ndim, 2);
     }
 
     #[test]
@@ -124,7 +106,7 @@ mod tests {
         padded.pad_input(data.view());
 
         // compute
-        sliding_mean(&mut padded, data.view_mut());
+        sliding_mean(&padded, data.view_mut());
 
         // compare
         let expected_mean = arr2(&[
@@ -366,7 +348,6 @@ mod tests {
         .into_dyn();
         assert_abs_diff_eq!(data, expected_std, epsilon = 1e-8);
     }
-
 
     #[test]
     fn check_standard_deviation_nan() {

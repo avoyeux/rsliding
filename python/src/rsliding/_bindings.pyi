@@ -21,6 +21,7 @@ def convolution(
         kernel: npt.NDArray[np.float64],
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        num_threads: int | None,
     ) -> npt.NDArray[np.float64]: ...
 
 def sliding_mean(
@@ -28,6 +29,7 @@ def sliding_mean(
         kernel: npt.NDArray[np.float64],
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        num_threads: int | None,
     ) -> npt.NDArray[np.float64]: ...
 
 def sliding_median(
@@ -35,6 +37,7 @@ def sliding_median(
         kernel: npt.NDArray[np.float64],
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        num_threads: int | None,
     ) -> npt.NDArray[np.float64]: ...
 
 def sliding_standard_deviation(
@@ -42,15 +45,17 @@ def sliding_standard_deviation(
         kernel: npt.NDArray[np.float64],
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        num_threads: int | None,
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 
 def sliding_sigma_clipping(
         data: npt.NDArray[np.float64],
         kernel: npt.NDArray[np.float64],
-        sigma_upper: float,
-        sigma_lower: float,
         center_mode: str,
-        max_iterations: int,
         pad_mode: Literal["constant", "reflect", "replicate"],
         pad_value: float,
+        sigma_upper: float | None,
+        sigma_lower: float | None,
+        max_iterations: int | None,
+        num_threads: int | None,
     ) -> npt.NDArray[np.float64]: ...

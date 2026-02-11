@@ -2,6 +2,7 @@
 
 use numpy::{PyArrayDyn, PyReadonlyArrayDyn};
 use pyo3::prelude::*;
+use rayon::ThreadPoolBuilder;
 
 // local
 use crate::bindings::utils::{array_d_to_py_array, py_array_to_array_d};
@@ -39,17 +40,18 @@ pub fn py_sliding_sigma_clipping<'py>(
     py: Python<'py>,
     data: PyReadonlyArrayDyn<'py, f64>,
     kernel: PyReadonlyArrayDyn<'py, f64>,
-    sigma_upper: f64,
-    sigma_lower: f64,
     center_mode: &str,
-    max_iterations: usize,
     pad_mode: &str,
     pad_value: f64,
+    sigma_upper: Option<f64>,
+    sigma_lower: Option<f64>,
+    max_iterations: Option<usize>,
+    num_threads: Option<usize>,
 ) -> PyResult<Bound<'py, PyArrayDyn<f64>>> {
     let mut data_arr = py_array_to_array_d(&data)?;
     let kernel_arr = py_array_to_array_d(&kernel)?;
 
-    // pad
+    // pad mode
     let padding_mode = match pad_mode {
         "constant" => PaddingMode::Constant(pad_value),
         "reflect" => PaddingMode::Reflect,
@@ -62,9 +64,8 @@ pub fn py_sliding_sigma_clipping<'py>(
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(args));
         }
     };
-    let mut padded = SlidingWorkspace::new(data_arr.shape(), kernel_arr, padding_mode).unwrap();
-    padded.pad_input(data_arr.view());
 
+    // center mode
     let center_mode = match center_mode {
         "mean" => CenterMode::Mean,
         "median" => CenterMode::Median,
@@ -75,14 +76,52 @@ pub fn py_sliding_sigma_clipping<'py>(
         }
     };
 
-    // sliding sigma clipping
-    sliding_sigma_clipping(
-        &mut padded,
-        data_arr.view_mut(),
-        &Some(sigma_upper),
-        &Some(sigma_lower),
-        &center_mode,
-        &Some(max_iterations),
-    );
+    // threads
+    match num_threads {
+        Some(n) => {
+            let pool = ThreadPoolBuilder::new()
+                .num_threads(n)
+                .build()
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+
+            py.allow_threads(|| {
+                pool.install(|| {
+                    // padding
+                    let mut padded =
+                        SlidingWorkspace::new(data_arr.shape(), kernel_arr, padding_mode).unwrap();
+                    padded.pad_input(data_arr.view());
+
+                    // sliding sigma clipping
+                    sliding_sigma_clipping(
+                        &mut padded,
+                        data_arr.view_mut(),
+                        &sigma_upper,
+                        &sigma_lower,
+                        &center_mode,
+                        &max_iterations,
+                    );
+                })
+            });
+        }
+        None => {
+            py.allow_threads(|| {
+                // padding
+                let mut padded =
+                    SlidingWorkspace::new(data_arr.shape(), kernel_arr, padding_mode).unwrap();
+                padded.pad_input(data_arr.view());
+
+                // sliding sigma clipping
+                sliding_sigma_clipping(
+                    &mut padded,
+                    data_arr.view_mut(),
+                    &sigma_upper,
+                    &sigma_lower,
+                    &center_mode,
+                    &max_iterations,
+                );
+            });
+        }
+    }
+
     array_d_to_py_array(py, data_arr)
 }
