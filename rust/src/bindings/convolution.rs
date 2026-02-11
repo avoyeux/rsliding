@@ -1,5 +1,6 @@
 //! Python bindings for the convolution operation.
 
+use ndarray::Axis;
 use numpy::{PyArrayDyn, PyReadonlyArrayDyn};
 use pyo3::prelude::*;
 
@@ -35,7 +36,10 @@ pub fn py_convolution<'py>(
     pad_value: f64,
 ) -> PyResult<Bound<'py, PyArrayDyn<f64>>> {
     let mut data_arr = py_array_to_array_d(&data)?;
-    let kernel_arr = py_array_to_array_d(&kernel)?;
+    let mut kernel_arr = py_array_to_array_d(&kernel)?;
+    for axis in 0..kernel_arr.ndim() {
+        kernel_arr.invert_axis(Axis(axis));
+    }
 
     // pad
     let padding_mode = match pad_mode {

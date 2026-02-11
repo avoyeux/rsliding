@@ -10,6 +10,8 @@ use crate::core::padding::SlidingWorkspace;
 /// N-dimensional convolution for a kernel with weights and an input array with NaNs.
 /// The NaN values in the input are ignored in the convolution operation.
 /// If no valid values in the kernel window, the output is set to NaN.
+/// Keep in mind that the kernel is not flipped and as such should be flipped before creating
+/// the sliding workspace if you do not want a cross-correlation operation.
 pub fn convolution<'a>(padded: &mut SlidingWorkspace, mut data: ArrayViewMutD<'a, f64>) {
     padded.idx.fill(0);
 
@@ -42,6 +44,7 @@ pub fn convolution<'a>(padded: &mut SlidingWorkspace, mut data: ArrayViewMutD<'a
                 }
             }
         } else {
+            has_valid = true;
             for i in 0..padded.kernel_offsets.len() {
                 let v = unsafe {
                     *padded_slice
