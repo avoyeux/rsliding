@@ -1,37 +1,45 @@
-//! Implements the workspace for all sliding operations.
-//! Done this way to avoid allocations and redundant calculations.
+//! Contains the workspace struct used by all sliding operations.
+//! This struct does the padding and keeps the padded buffer and offsets needed for all sliding
+//! operations.
+
 use ndarray::{ArrayD, ArrayViewD, Axis, IxDyn, Slice};
 
-// todo update/change all docstring
-
+/// The different padding modes implemented in the SlidingWorkspace struct.
+/// Constant puts constant values as the padding.
+/// Reflect, reflects the values at the border.
+/// Replicate, replicates the border values.
 pub enum PaddingMode {
     Constant(f64),
     Reflect,
     Replicate,
 }
 
+/// Workspace used in all sliding operations.
+/// The workspace adds the padding and contains the different buffers needed for the sliding
+/// operations.
 pub struct SlidingWorkspace {
     pub padded_buffer: ArrayD<f64>, // reused by padding operations
-    pub kernel_offsets: Vec<isize>,
-    pub kernel_weights: Vec<f64>,
-    ndim: usize,               // number of dimensions
-    pad: Vec<usize>,           // per-dimension padding
-    padding_mode: PaddingMode, // padding mode
-    out_shape: Vec<usize>,     // shape of the output
-    kernel: ArrayD<f64>,
-    filled: bool,
+    pub kernel_offsets: Vec<isize>, // the offsets of the kernel elements in the padded buffer
+    pub kernel_weights: Vec<f64>,   // the weights of the kernel
+    ndim: usize,                    // number of dimensions
+    pad: Vec<usize>,                // per-dimension padding
+    padding_mode: PaddingMode,      // padding mode
+    out_shape: Vec<usize>,          // shape of the output
+    kernel: ArrayD<f64>,            // the actual kernel
+    filled: bool, // used when the padding is set to constant (so the padding is only done once)
 }
 
 impl SlidingWorkspace {
-    /// Creates a new PaddingWorkspace.
-    /// Check the kernel validity and setups the padded and output buffers.
+    /// Creates a new SlidingWorkspace.
+    /// Computes the offsets needed during the multithreaded sliding operations.
+    /// Also creates the padded_buffer (use the pad_input method to populate the padded buffer and
+    /// compute the padding (if needed).
+    /// Keep in mind that the kernel needs to be contiguous.
     pub fn new(
         input_shape: &[usize],
         kernel: ArrayD<f64>,
         padding_mode: PaddingMode,
     ) -> Result<Self, String> {
-        // check kernel validity
-        Self::check_kernel(input_shape, kernel.shape())?;
 
         let ndim = input_shape.len();
         let pad: Vec<usize> = kernel.shape().iter().map(|&k| k / 2).collect();
@@ -46,11 +54,8 @@ impl SlidingWorkspace {
         let out_shape = input_shape.to_vec();
 
         // kernel offsets and weights (skip zeros)
-        let kernel_slice = kernel
-            .as_slice_memory_order()
-            .expect("Kernel must be contiguous");
-        let kernel_offsets = Vec::with_capacity(kernel_slice.len());
-        let kernel_weights = Vec::with_capacity(kernel_slice.len());
+        let kernel_offsets = Vec::with_capacity(kernel.len());
+        let kernel_weights = Vec::with_capacity(kernel.len());
 
         let mut instance = SlidingWorkspace {
             ndim,
@@ -68,9 +73,10 @@ impl SlidingWorkspace {
     }
 
     /// Pad the input data into the padded buffer.
-    /// input data shape must match the valid shape (and not the padded shape).
+    /// No shape checks are done so make sure that the input data shape matches the valid shape
+    /// (and not the padded shape), i.e. must match 'input_shape' given in new().
     pub fn pad_input<'a>(&mut self, input: ArrayViewD<'a, f64>) {
-        // reuse existing buffer; fill depending on mode
+        // fill once if padding mode is constant
         match self.padding_mode {
             PaddingMode::Constant(value) => {
                 if !self.filled {
@@ -81,6 +87,7 @@ impl SlidingWorkspace {
             _ => (), // other padding choices are done when data is already in the buffer.
         }
 
+        // populate input inside the padded buffer
         let mut window = self.padded_buffer.view_mut();
         for (axis, p) in self.pad.iter().enumerate() {
             let start = *p as isize;
@@ -97,6 +104,11 @@ impl SlidingWorkspace {
         }
     }
 
+    /// Computes the offset needed to get the corresponding element in the padded buffer from a
+    /// linear index in the output.
+    /// Used in the multithreaded sliding operations.
+    /// The inline macro is most likely useless given that it is only used inside this crate, but
+    /// kept for the reader.
     #[inline]
     pub fn base_offset_from_linear(&self, mut linear: usize, padded_strides: &[isize]) -> isize {
         let out_shape = &self.out_shape;
@@ -111,26 +123,7 @@ impl SlidingWorkspace {
         base
     }
 
-    /// Check if the kernel is valid for the given data.
-    /// # Errors
-    /// Returns an error if the kernel is not valid.
-    fn check_kernel(input_shape: &[usize], kernel_shape: &[usize]) -> Result<(), String> {
-        // todo add checks if zero or negative values
-
-        // dims
-        if input_shape.len() != kernel_shape.len() {
-            return Err("Data and kernel must have the same number of dimensions.".to_string());
-        }
-
-        // odd values
-        for &dim in kernel_shape {
-            if dim % 2 == 0 {
-                return Err("Kernel dimensions must be odd.".to_string());
-            }
-        }
-        Ok(())
-    }
-
+    /// Does the reflect mode padding.
     fn fill_reflect(&mut self) {
         for axis_idx in 0..self.ndim {
             let pad = self.pad[axis_idx];
@@ -162,6 +155,7 @@ impl SlidingWorkspace {
         }
     }
 
+    /// Mirrors the index for even-length reflection padding.
     #[inline]
     fn even_mirror_index(distance: usize, len: usize) -> usize {
         if len <= 1 {
@@ -175,6 +169,7 @@ impl SlidingWorkspace {
         d
     }
 
+    /// Does the replicate mode padding.
     fn fill_replicate(&mut self) {
         for axis_idx in 0..self.ndim {
             let pad = self.pad[axis_idx];
@@ -203,15 +198,13 @@ impl SlidingWorkspace {
         }
     }
 
+    /// Creates the kernel offsets and weights for the sliding operation.
     fn create_offsets(&mut self) {
         let mut idx = vec![0usize; self.ndim];
         let kernel_shape = self.kernel.shape().to_vec();
         let padded_strides = self.padded_buffer.strides();
         let kernel_strides = self.kernel.strides();
-        let kernel_slice = self
-            .kernel
-            .as_slice_memory_order()
-            .expect("Kernel must be contiguous");
+        let kernel_slice = self.kernel.as_slice_memory_order().unwrap();
 
         // manual multi-indexing
         let mut kernel_base = 0isize;

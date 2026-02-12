@@ -1,5 +1,8 @@
-//! 'sliding' library containing different sliding window operations.
-//! Done to replace the 'sliding' python library that I had created before.
+//! Rust sliding operation library with the corresponding python bindings.
+//! Has a padding, convolution, sliding_mean, sliding_median, sliding_standard_deviation and 
+//! sliding_sigma_clipping function.
+//! Data can contain NaN values and the kernel weights. The sliding_median computes the sliding
+//! weighted median when there are weights in the kernel.
 
 use pyo3::prelude::*;
 

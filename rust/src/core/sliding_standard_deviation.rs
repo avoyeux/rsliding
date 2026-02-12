@@ -1,4 +1,5 @@
-//! N-dimensional sliding standard deviation operation.
+//! N-dimensional sliding standard deviation operation with NaN values and a weighted kernel.
+//! Also computes the sliding mean at the same time.
 
 use ndarray::ArrayViewMutD;
 use rayon::prelude::*;
@@ -6,8 +7,10 @@ use rayon::prelude::*;
 // local
 use crate::core::padding::SlidingWorkspace;
 
-/// N-dimensional sliding standard deviation
-/// also keeps the sliding mean as it might be chosen for the sigma clipping
+/// N-dimensional sliding standard deviation operation with NaN values and a weighted kernel.
+/// NaN values are ignored.
+/// If no valid values inside a kernel window, the output is set to NaN.
+/// Gives the sliding standard deviation and the sliding mean at the same time.
 pub fn sliding_standard_deviation<'a>(
     padded: &SlidingWorkspace,
     mut data: ArrayViewMutD<'a, f64>,

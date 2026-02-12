@@ -1,4 +1,6 @@
-// ! N-dimensional convolution operation.
+//! N-dimensional convolution operation with NaN handling and kernel weights.
+//! Actually does a correlation operation so keep in mind to flip the kernel prior to using the
+//! function.
 
 use ndarray::ArrayViewMutD;
 use rayon::prelude::*;

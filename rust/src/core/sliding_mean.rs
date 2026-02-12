@@ -1,4 +1,6 @@
-//! To compute the sliding mean of an n-dimensional array with possible NaN values.
+//! To compute the sliding mean of an n-dimensional array with possible NaN values and kernel
+//! weights. Not actually used in the sliding sigma clipping implementation as the sliding
+//! standard deviation function already computes the sliding mean.
 
 use ndarray::ArrayViewMutD;
 use rayon::prelude::*;
@@ -6,12 +8,9 @@ use rayon::prelude::*;
 // local
 use crate::core::padding::SlidingWorkspace;
 
-// todo update all docstring
-
-// / N-dimensional sliding mean operation.
-// / NaN values are ignored.
-// / Kernel can contain weights.
-// / Data, kernel, and the padded buffer must be contiguous; this function will panic otherwise.
+/// N-dimensional sliding mean operation with NaN values and a weighted kernel.
+/// The NaN values are ignored.
+/// If no valid data inside a kernel, the corresponding output is set to NaN.
 pub fn sliding_mean<'a>(padded: &SlidingWorkspace, mut data: ArrayViewMutD<'a, f64>) {
     let has_nan = data.iter().any(|v| v.is_nan());
     let padded_strides = padded.padded_buffer.strides();

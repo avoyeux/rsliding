@@ -18,11 +18,16 @@ use crate::core::sliding_standard_deviation::sliding_standard_deviation;
 /// Parameters
 /// ----------
 /// data : numpy.ndarray[float64]
-///  Input N-dimensional array.
+///   Input N-dimensional array.
 /// kernel : numpy.ndarray[float64]
-/// Kernel (weights) array with the same number of dimensions as ``data``.
+///    Kernel (weights) array with the same number of dimensions as ``data``.
+/// pad_mode: str
+///    the padding mode to use. Can be 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
-/// Constant value used to pad the borders of ``data``.
+///    Constant value used to pad the borders of ``data``. Used when pad_mode is set to 'constant'.
+/// num_threads: int | None
+///    The number of threads to used for the sliding operation. If set to None, all available
+///    logical units are used.
 ///
 /// Returns
 /// -------

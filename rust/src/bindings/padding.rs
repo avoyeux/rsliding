@@ -7,16 +7,24 @@ use pyo3::prelude::*;
 use crate::bindings::utils::{array_d_to_py_array, py_array_to_array_d};
 use crate::core::padding::{PaddingMode, SlidingWorkspace};
 
-/// Pad an N-dimensional array according to the specified kernel shape and padding value.
-///
+/// Adds padding to an N-dimensional array according to the specified kernel shape and padding
+/// option.
 /// Parameters
 /// ----------
 /// data : numpy.ndarray[float64]
 ///    Input N-dimensional array.
-/// kernel_shape : numpy.ndarray[uint64]
-///   Shape of the kernel (number of dimensions must match ``data``).
+/// kernel : numpy.ndarray[float64]
+///    the kernel to use when doing the sliding operations (needs to have the same dimensionality 
+///    as ``data``).
+/// pad_mode: str
+///    the padding mode to use. Can be 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
-///   Constant value used to pad the borders of ``data``.
+///    Constant value used to pad the borders of ``data`` (only used when pad_mode is 'constant').
+/// 
+/// Returns
+/// ----------
+/// numpy.ndarray[float64]
+///    Padded N-dimensional array.
 #[pyfunction(name = "padding")]
 pub fn py_padding<'py>(
     py: Python<'py>,

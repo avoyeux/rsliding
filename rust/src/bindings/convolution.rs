@@ -10,7 +10,7 @@ use crate::bindings::utils::{array_d_to_py_array, py_array_to_array_d};
 use crate::core::convolution::convolution;
 use crate::core::padding::{PaddingMode, SlidingWorkspace};
 
-/// Compute the N-dimensional convolution of an input array with a kernel.
+/// Compute the N-dimensional convolution of an input array with a weighted kernel.
 /// NaN values in the input are ignored in the convolution operation.
 /// If no valid values in the kernel window, the output is set to NaN.
 /// Kernel can contain weights.
@@ -21,11 +21,16 @@ use crate::core::padding::{PaddingMode, SlidingWorkspace};
 ///    Input N-dimensional array.
 /// kernel : numpy.ndarray[float64]
 ///    Kernel (weights) array with the same number of dimensions as ``data``.
+/// pad_mode: str
+///    Padding mode to use. One of 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
 ///    Constant value used to pad the borders of ``data``.
+/// num_threads: int | None
+///     the number of threads to use in the convolution. If None, uses the number of available
+///     logical units.
 ///
 /// Returns
-/// -------
+/// ----------
 /// numpy.ndarray[float64]
 ///    Array with the same shape as ``data`` containing the convolution result.
 #[pyfunction(name = "convolution")]
@@ -39,6 +44,8 @@ pub fn py_convolution<'py>(
 ) -> PyResult<Bound<'py, PyArrayDyn<f64>>> {
     let mut data_arr = py_array_to_array_d(&data)?;
     let mut kernel_arr = py_array_to_array_d(&kernel)?;
+
+    // invert as the actual convolution function does a correlation operation.
     for axis in 0..kernel_arr.ndim() {
         kernel_arr.invert_axis(Axis(axis));
     }

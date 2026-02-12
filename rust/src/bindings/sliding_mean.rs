@@ -20,8 +20,18 @@ use crate::core::sliding_mean::sliding_mean;
 ///    Input N-dimensional array.
 /// kernel : numpy.ndarray[float64]
 ///    Kernel (weights) array with the same number of dimensions as ``data``.
+/// pad_mode: str
+///    the padding mode to use. Can be 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
 ///    Constant value used to pad the borders of ``data``.
+/// num_threads: int | None
+///     the number of threads to use in the sliding operation. If set to None, all available logical
+///     units are used.
+/// 
+/// Returns
+/// ----------
+/// numpy.ndarray[float64]
+///    Array with the same shape as ``data`` containing the sliding mean result.
 #[pyfunction(name = "sliding_mean")]
 pub fn py_sliding_mean<'py>(
     py: Python<'py>,

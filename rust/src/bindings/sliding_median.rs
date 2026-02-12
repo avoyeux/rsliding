@@ -9,24 +9,31 @@ use crate::bindings::utils::{array_d_to_py_array, py_array_to_array_d};
 use crate::core::padding::{PaddingMode, SlidingWorkspace};
 use crate::core::sliding_median::sliding_median;
 
-/// N-dimensional sliding median of an input array with a kernel.
+/// N-dimensional sliding weighted median of an input array with a kernel.
 /// NaN values in the input are ignored in the median calculation.
 /// If no valid values in the kernel window, the output is set to NaN.
 /// Kernel can contain weights (will be normalized).
+/// The weighted median means that it finds the value where the cumulative weight before and after
+/// represent 50% of the weight.
 ///
 /// Parameters
 /// ----------
 /// data : numpy.ndarray[float64]
 ///   Input N-dimensional array.
 /// kernel : numpy.ndarray[float64]
-///  Kernel (weights) array with the same number of dimensions as ``data``.
+///    Kernel (weights) array with the same number of dimensions as ``data``.
+/// pad_mode: str
+///    the padding mode to use. Can be 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
-///  Constant value used to pad the borders of ``data``.
+///    Constant value used to pad the borders of ``data``. Used when pad_mode is set to 'constant'.
+/// num_threads: int | None
+///    The number of threads to used for the sliding operation. If set to None, all available
+///    logical units are used.
 ///
 /// Returns
 /// -------
 /// numpy.ndarray[float64]
-///  Array with the same shape as ``data`` containing the sliding median result.
+///    Array with the same shape as ``data`` containing the sliding median result.
 #[pyfunction(name = "sliding_median")]
 pub fn py_sliding_median<'py>(
     py: Python<'py>,

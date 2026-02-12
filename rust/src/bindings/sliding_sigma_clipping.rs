@@ -10,6 +10,9 @@ use crate::core::padding::{PaddingMode, SlidingWorkspace};
 use crate::core::sliding_sigma_clipping::{CenterMode, sliding_sigma_clipping};
 
 /// N-dimensional sliding sigma clipping of an input array with a kernel.
+/// The clipped values are set to the corresponding final sliding mode value.
+/// The sigma clipping stops after 'max_iterations' number of times or when no more clipping was
+/// done.
 /// NaN values in the input are ignored in the calculation.
 /// If no valid values in the kernel window, the output is set to NaN.
 /// Kernel can contain weights.
@@ -17,24 +20,28 @@ use crate::core::sliding_sigma_clipping::{CenterMode, sliding_sigma_clipping};
 /// Parameters
 /// ----------
 /// data : numpy.ndarray[float64]
-/// Input N-dimensional array.
+///   Input N-dimensional array.
 /// kernel : numpy.ndarray[float64]
-/// Kernel (weights) array with the same number of dimensions as ``data``.
-/// sigma_upper : float64
-/// Upper sigma threshold for clipping. If None, no upper clipping is applied.
-/// sigma_lower : float64
-/// Lower sigma threshold for clipping. If None, no lower clipping is applied.
-/// center_mode : str
-/// Method to compute the center value for sigma clipping, either 'mean' or 'median'.
-/// max_iterations : int
-/// Maximum number of iterations for sigma clipping. If 0, iterations continue until convergence.
+///    Kernel (weights) array with the same number of dimensions as ``data``.
+/// pad_mode: str
+///    the padding mode to use. Can be 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
-/// Constant value used to pad the borders of ``data``.
+///    Constant value used to pad the borders of ``data``. Used when pad_mode is set to 'constant'.
+/// sigma_upper: float | None
+///    the upper sigma coefficient to use for the clipping. If None, no upper clipping is done.
+/// sigma_lower: float | None
+///    the lower sigma coefficient to use for the clipping. If None, no lower clipping is done.
+/// max_iterations: int | None
+///    the maximum number of iterations to perform the sigma clipping. If None, iterations continue until convergence.
+/// num_threads: int | None
+///    The number of threads to used for the sliding operation. If set to None, all available
+///    logical units are used.
 ///
 /// Returns
 /// -------
-/// numpy.ndarray[float64]
-/// Array with the same shape as ``data`` containing the sigma clipped result.
+/// tuple[numpy.ndarray[float64], numpy.ndarray[bool]]
+///     Array with the same shape as ``data`` containing the sigma clipped result.
+///     Bool array with the clipped positions.
 #[pyfunction(name = "sliding_sigma_clipping")]
 pub fn py_sliding_sigma_clipping<'py>(
     py: Python<'py>,
@@ -47,7 +54,7 @@ pub fn py_sliding_sigma_clipping<'py>(
     sigma_lower: Option<f64>,
     max_iterations: Option<usize>,
     num_threads: Option<usize>,
-) -> PyResult<Bound<'py, PyArrayDyn<f64>>> {
+) -> PyResult<(Bound<'py, PyArrayDyn<f64>>, Bound<'py, PyArrayDyn<bool>>)> {
     let mut data_arr = py_array_to_array_d(&data)?;
     let kernel_arr = py_array_to_array_d(&kernel)?;
 
@@ -77,7 +84,7 @@ pub fn py_sliding_sigma_clipping<'py>(
     };
 
     // threads
-    match num_threads {
+    let changed_mask = match num_threads {
         Some(n) => {
             let pool = ThreadPoolBuilder::new()
                 .num_threads(n)
@@ -99,9 +106,9 @@ pub fn py_sliding_sigma_clipping<'py>(
                         &sigma_lower,
                         &center_mode,
                         &max_iterations,
-                    );
+                    )
                 })
-            });
+            })
         }
         None => {
             py.allow_threads(|| {
@@ -118,10 +125,12 @@ pub fn py_sliding_sigma_clipping<'py>(
                     &sigma_lower,
                     &center_mode,
                     &max_iterations,
-                );
-            });
+                )
+            })
         }
-    }
+    };
 
-    array_d_to_py_array(py, data_arr)
+    let sigma_clipped = array_d_to_py_array(py, data_arr)?;
+    let changed_mask = array_d_to_py_array(py, changed_mask)?;
+    Ok((sigma_clipped, changed_mask))
 }

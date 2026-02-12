@@ -161,8 +161,9 @@ def sliding_sigma_clipping(
         sigma_upper: float | None,
         sigma_lower: float | None,
         max_iterations: int | None,
+        masked_array: bool = False,
         threads: int | None = None,
-    ) -> npt.NDArray[np.float64]:
+    ) -> npt.NDArray[np.float64] | np.ma.MaskedArray:
     """
     N-dimensional sliding sigma clipping of a numpy float64 array given a kernel
     todo update and change docstring
@@ -180,10 +181,10 @@ def sliding_sigma_clipping(
             available CPU cores. Defaults to None.
 
     Returns:
-        npt.NDArray[np.float64]: _description_
+        npt.NDArray[np.float64] | tuple[npt.NDArray[np.float64], npt.NDArray[np.bool_]]:
     """
 
-    result = _rust.sliding_sigma_clipping(
+    sigma_clipped, mask = _rust.sliding_sigma_clipping(
         data,
         kernel,
         center_mode,
@@ -194,4 +195,5 @@ def sliding_sigma_clipping(
         max_iterations,
         threads,
     )
-    return result
+    if masked_array: return np.ma.masked_array(sigma_clipped, mask=mask)
+    return sigma_clipped
