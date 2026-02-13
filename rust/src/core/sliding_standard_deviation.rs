@@ -11,7 +11,7 @@ use crate::core::padding::SlidingWorkspace;
 /// NaN values are ignored.
 /// If no valid values inside a kernel window, the output is set to NaN.
 /// Gives the sliding standard deviation and the sliding mean at the same time.
-pub fn sliding_standard_deviation<'a>(
+pub fn sliding_standard_deviation_old<'a>(
     padded: &SlidingWorkspace,
     mut data: ArrayViewMutD<'a, f64>,
     mut mean_buffer: ArrayViewMutD<'a, f64>,
@@ -68,5 +68,63 @@ pub fn sliding_standard_deviation<'a>(
                 (m2 / (n as f64)).sqrt()
             };
             *mean_out = if n == 0 { f64::NAN } else { mean };
+        });
+}
+
+use crate::core::sliding_mean::sliding_mean;
+
+// trying more stable approach
+pub fn sliding_standard_deviation<'a>(
+    padded: &SlidingWorkspace,
+    mut data: ArrayViewMutD<'a, f64>,
+    mut mean_buffer: ArrayViewMutD<'a, f64>,
+) {
+    // update mean buffer
+    sliding_mean(padded, mean_buffer.view_mut());
+
+    // reset kernel index buffer
+    let padded_strides = padded.padded_buffer.strides();
+    // Assume everything is contiguous and abort early if it is not.
+    let padded_slice = padded.padded_buffer.as_slice_memory_order().unwrap();
+    let has_nan = padded_slice.iter().any(|v| v.is_nan());
+    let out_slice = data.as_slice_memory_order_mut().unwrap();
+    let mean_slice = mean_buffer.as_slice_memory_order().unwrap();
+
+    let k_offsets = &padded.kernel_offsets;
+    let k_weights = &padded.kernel_weights;
+
+    out_slice
+        .par_iter_mut()
+        .zip(mean_slice)
+        .enumerate()
+        .for_each(|(out_linear, (out, mean))| {
+            let base = padded.base_offset_from_linear(out_linear, padded_strides);
+
+            let mut n = 0usize;
+            let mut sum = 0.0;
+
+            if has_nan {
+                for i in 0..k_offsets.len() {
+                    let value = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
+                    if !value.is_nan() {
+                        n += 1;
+                        let delta = value - *mean;
+                        sum += k_weights[i] * delta * delta;
+                    }
+                }
+            } else {
+                for i in 0..k_offsets.len() {
+                    let value = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
+                    n += 1;
+                    let delta = value - *mean;
+                    sum += k_weights[i] * delta * delta;
+                }
+            }
+
+            *out = if n == 0 {
+                f64::NAN
+            } else {
+                (sum / (n as f64)).sqrt()
+            };
         });
 }
