@@ -17,13 +17,13 @@ pub fn sliding_standard_deviation<'a>(
     mut mean_buffer: ArrayViewMutD<'a, f64>,
 ) {
     // reset kernel index buffer
-    let has_nan = data.iter().any(|v| v.is_nan());
     let padded_strides = padded.padded_buffer.strides();
     // Assume everything is contiguous and abort early if it is not.
     let padded_slice = padded
         .padded_buffer
         .as_slice_memory_order()
         .expect("Padding buffer must be contiguous");
+    let has_nan = padded_slice.iter().any(|v| v.is_nan());
     let out_slice = data
         .as_slice_memory_order_mut()
         .expect("Output view must be contiguous");
