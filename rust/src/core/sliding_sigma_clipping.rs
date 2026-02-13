@@ -89,8 +89,8 @@ fn clipping(
 
     data_slice
         .par_iter_mut()
-        .zip(mode_slice.par_iter())
-        .zip(std_slice.par_iter())
+        .zip(mode_slice)
+        .zip(std_slice)
         .map(|((x, &mu), &s)| {
             let diff = *x - mu;
             let mut outlier = false;
@@ -125,8 +125,8 @@ fn fill_n_mask(mut data: ArrayViewMutD<f64>, mode: ArrayViewD<f64>) -> ArrayD<bo
 
     mask_slice
         .par_iter_mut()
-        .zip(data_slice.par_iter_mut())
-        .zip(mode_slice.par_iter())
+        .zip(data_slice)
+        .zip(mode_slice)
         .for_each(|((m, x), &mu)| {
             let is_nan = x.is_nan();
 

@@ -62,7 +62,7 @@ pub fn sliding_standard_deviation_old<'a>(
                 }
             }
 
-            *out = if n == 0 {
+            *out = if n == 0 { // wrong, should be sum of weights
                 f64::NAN
             } else {
                 (m2 / (n as f64)).sqrt()
@@ -71,7 +71,7 @@ pub fn sliding_standard_deviation_old<'a>(
         });
 }
 
-use crate::core::sliding_mean::sliding_mean;
+use crate::core::sliding_mean::{neumaier_add, sliding_mean};
 
 // trying more stable approach
 pub fn sliding_standard_deviation<'a>(
@@ -100,31 +100,42 @@ pub fn sliding_standard_deviation<'a>(
         .for_each(|(out_linear, (out, mean))| {
             let base = padded.base_offset_from_linear(out_linear, padded_strides);
 
-            let mut n = 0usize;
+            let mut sum_weights = 0.0;
             let mut sum = 0.0;
+            let mut c = 0.0;
+            let mut c_w = 0.0;
 
             if has_nan {
                 for i in 0..k_offsets.len() {
                     let value = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
                     if !value.is_nan() {
-                        n += 1;
                         let delta = value - *mean;
-                        sum += k_weights[i] * delta * delta;
+                        // sum += k_weights[i] * delta * delta; // ! old definition was wrong
+                        let kernel_value = k_weights[i];
+                        neumaier_add(&mut sum_weights, &mut c_w, kernel_value);
+                        neumaier_add(&mut sum, &mut c, kernel_value * delta * delta);
                     }
                 }
             } else {
                 for i in 0..k_offsets.len() {
                     let value = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
-                    n += 1;
                     let delta = value - *mean;
-                    sum += k_weights[i] * delta * delta;
+                    // sum += k_weights[i] * delta * delta;
+                    let kernel_value = k_weights[i];
+                    neumaier_add(&mut sum_weights, &mut c_w, kernel_value);
+                    neumaier_add(&mut sum, &mut c, kernel_value * delta * delta);
                 }
             }
 
-            *out = if n == 0 {
+            // *out = if sum_weights == 0.0 {
+            //     f64::NAN
+            // } else {
+            //     (sum / (sum_weights as f64)).sqrt()
+            // };
+            *out = if sum_weights == 0.0 {
                 f64::NAN
             } else {
-                (sum / (n as f64)).sqrt()
+                ((sum + c) / (sum_weights + c_w)).sqrt()
             };
         });
 }

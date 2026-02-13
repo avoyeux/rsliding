@@ -8,6 +8,18 @@ use rayon::prelude::*;
 // local
 use crate::core::padding::SlidingWorkspace;
 
+/// Neumaier addition
+#[inline(always)]
+pub fn neumaier_add(sum: &mut f64, c: &mut f64, value: f64) {
+    let t = *sum + value;
+    if sum.abs() >= value.abs() {
+        *c += (*sum - t) + value;
+    } else {
+        *c += (value - t) + *sum;
+    }
+    *sum = t;
+}
+
 /// N-dimensional sliding mean operation with NaN values and a weighted kernel.
 /// The NaN values are ignored.
 /// If no valid data inside a kernel, the corresponding output is set to NaN.
@@ -26,29 +38,44 @@ pub fn sliding_mean<'a>(padded: &SlidingWorkspace, mut data: ArrayViewMutD<'a, f
         .for_each(|(out_linear, out)| {
             let base = padded.base_offset_from_linear(out_linear, padded_strides);
 
-            let mut acc = 0.0;
+            // let mut acc = 0.0;
             let mut weight_sum = 0.0;
+            let mut sum = 0.0;
+            let mut c = 0.0;
+            let mut c_w = 0.0;
 
             if has_nan {
                 for i in 0..k_offsets.len() {
                     let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
                     if !v.is_nan() {
-                        acc += v * k_weights[i];
-                        weight_sum += k_weights[i];
+                        let kernel_value = k_weights[i];
+                        // acc += v * k_weights[i];
+                        neumaier_add(&mut sum, &mut c, v * kernel_value);
+                        neumaier_add(&mut weight_sum, &mut c_w, kernel_value);
+                        // weight_sum += k_weights[i];
                     }
                 }
             } else {
                 for i in 0..k_offsets.len() {
                     let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
-                    acc += v * k_weights[i];
-                    weight_sum += k_weights[i];
+                        let kernel_value = k_weights[i];
+                        // acc += v * k_weights[i];
+                        neumaier_add(&mut sum, &mut c, v * kernel_value);
+                        neumaier_add(&mut weight_sum, &mut c_w, kernel_value);
+                        // weight_sum += k_weights[i];
                 }
             }
 
             *out = if weight_sum == 0.0 {
                 f64::NAN
             } else {
-                acc / weight_sum
+                (sum + c) / (weight_sum + c_w)
             };
+
+            // *out = if weight_sum == 0.0 {
+            //     f64::NAN
+            // } else {
+            //     acc / weight_sum
+            // };
         });
 }
