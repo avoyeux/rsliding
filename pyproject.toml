@@ -4,21 +4,31 @@ build-backend = "maturin"
 
 [project]
 name = "rsliding"
-version = "0.1.0"
-description = "NumPy-friendly sliding window ops backed by Rust"
+version = "1.0.0"
+description = """
+Rust code to be used in Python. Has sliding operations (padding, convolution, mean, median,
+standard deviation, sigma clipping) for float64 numpy data with NaN values and a kernel with
+weights.
+"""
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Your Name", email = "you@example.com" }]
+authors = [{ name = "Voyeux Alfred", email = "voyeuxalfred@gmail.com" }]
 classifiers = [
 	"Programming Language :: Python :: 3",
 	"Programming Language :: Python :: Implementation :: CPython",
 	"Programming Language :: Rust",
 	"Typing :: Typed",
+	"Operating System :: OS Independent",
+	"Operating System :: Microsoft :: Windows",
+	"Operating System :: MacOS",
+	"Operating System :: POSIX :: Linux",
 ]
 dependencies = ["numpy>=1.24"]
 
-[project.optional-dependencies]
-dev = ["mypy>=1.8", "ruff>=0.3", "pytest>=8.0"]
+[project.urls]
+Homepage = "https://github.com/avoyeux/rsliding"
+Documentation = "https://github.com/avoyeux/rsliding#readme"
+Source = "https://github.com/avoyeux/rsliding"
 
 [tool.maturin]
 bindings = "pyo3"
@@ -30,15 +40,3 @@ sdist-include = [
 	"python/src/rsliding/py.typed",
 	"python/src/rsliding/_bindings.pyi",
 ]
-
-[tool.ruff]
-line-length = 100
-target-version = "py311"
-src = ["python/src"]
-
-[tool.mypy]
-python_version = "3.11"
-mypy_path = ["python/src"]
-warn_unused_ignores = true
-warn_return_any = true
-check_untyped_defs = true

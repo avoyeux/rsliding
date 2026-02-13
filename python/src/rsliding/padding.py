@@ -48,7 +48,7 @@ class Padding(BaseCheck):
             pad_value (float, optional): the value to use for padding when borders is 'constant'.
                 Defaults to 0.
             force_contiguous (bool, optional): whether to force the data and kernel to be
-                contiguous in memory. Defaults to True.
+                contiguous in memory. Also casts the data to float64. Defaults to True.
         """
 
         self._data = data

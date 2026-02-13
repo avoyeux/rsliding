@@ -50,7 +50,7 @@ class SlidingMedian(BaseCheck):
             pad_value (float, optional): the value to use for padding when borders is 'constant'.
                 Defaults to 0.
             force_contiguous (bool, optional): whether to force the data and kernel to be
-                contiguous in memory. Defaults to True.
+                contiguous in memory. Also casts the data to float64. Defaults to True.
             threads (int | None, optional): the number of threads to use in the sliding operation.
                 If set to None, uses all the available logical cores. Defaults to 1.
         """

@@ -74,15 +74,22 @@ class SlidingSigmaClipping(BaseCheck):
             sigma_upper (float | None | _UseSigma, optional): the number of standard deviations to
                 use for the upper clipping limit. It will be set to 'sigma' if _USE_SIGMA. When set
                 to None, no upper clipping is done. Defaults to _USE_SIGMA.
-            max_iters (int | None, optional): the maximum number of iterations to perform.
-                If None, iterate until convergence. Defaults to 5.
             borders (BorderType, optional): the border type to use for padding. If None, does the
                 same operation than setting the borders to 'constant' and pad_value to np.nan (i.e.
                 adaptative kernel sizes). Defaults to 'reflect'.
-            threads (int | None, optional): the number of threads to use in the sliding operation.
-                If set to None, uses all the available logical cores. Defaults to 1.
+            pad_value (float, optional): the value to use for padding when borders is 'constant'.
+                Defaults to 0.
+            max_iters (int | None, optional): the maximum number of iterations to perform.
+                If None, iterate until convergence. Defaults to 5.
             masked_array (bool, optional): whether to return a MaskedArray (True) or a normal
                 ndarray (False). Defaults to False.
+            force_contiguous (bool, optional): whether to force the data and kernel to be
+                contiguous in memory. Also casts the data to float64. Defaults to True.
+            threads (int | None, optional): the number of threads to use in the sliding operation.
+                If set to None, uses all the available logical cores. Defaults to 1.
+
+        Raises:
+            ValueError: if both sigma_upper and sigma_lower are set to None.
         """
 
         self._data = data

@@ -76,5 +76,5 @@ class BaseCheck:
         intended).
         """
 
-        self._data = np.ascontiguousarray(self._data)
-        self._kernel = np.ascontiguousarray(self._kernel)
+        self._data = np.ascontiguousarray(self._data, dtype=np.float64)
+        self._kernel = np.ascontiguousarray(self._kernel, dtype=np.float64)
