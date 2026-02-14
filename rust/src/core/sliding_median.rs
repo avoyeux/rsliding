@@ -28,16 +28,12 @@ pub fn sliding_median<'a>(padded: &SlidingWorkspace, mut data: ArrayViewMutD<'a,
             let mut window_weights = Vec::with_capacity(k_offsets.len());
 
             for i in 0..k_offsets.len() {
-                let w = k_weights[i];
-                if w == 0.0 {
-                    continue;
-                }
                 let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
-                if v.is_nan() {
-                    continue;
+
+                if !v.is_nan() {
+                    window_vals.push(v);
+                    window_weights.push(k_weights[i]);
                 }
-                window_vals.push(v);
-                window_weights.push(w);
             }
 
             let median = if window_vals.is_empty() {

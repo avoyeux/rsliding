@@ -48,6 +48,7 @@ class SlidingSigmaClipping(BaseCheck):
             masked_array: bool = False,
             force_contiguous: bool = True,
             threads: int | None = 1,
+            neumaier: bool = False,
         ) -> None:
         """
         Does a sliding sigma clipping of data with NaN values and a kernel with weights.
@@ -87,7 +88,9 @@ class SlidingSigmaClipping(BaseCheck):
                 contiguous in memory. Also casts the data to float64. Defaults to True.
             threads (int | None, optional): the number of threads to use in the sliding operation.
                 If set to None, uses all the available logical cores. Defaults to 1.
-
+            neumaier (bool, optional): whether to use the Neumaier algorithm for floating point
+                summation. Never tested a case where it would make a difference, but it is more
+                stable numerically. More expensive computationally. Defaults to False.
         Raises:
             ValueError: if both sigma_upper and sigma_lower are set to None.
         """
@@ -102,6 +105,7 @@ class SlidingSigmaClipping(BaseCheck):
         self._sigma_upper = sigma if sigma_upper is _USE_SIGMA else sigma_upper
         self._threads = threads
         self._max_iters = max_iters
+        self._neumaier = neumaier
 
         # CHECK
         if (self._sigma_upper is None) and (self._sigma_lower is None):
@@ -142,6 +146,7 @@ class SlidingSigmaClipping(BaseCheck):
             self._center_choice,
             pad_mode,#type:ignore
             pad_value,
+            self._neumaier,
             self._sigma_upper,#type:ignore
             self._sigma_lower,#type:ignore
             self._max_iters,

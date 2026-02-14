@@ -14,13 +14,13 @@ use crate::core::padding::{PaddingMode, SlidingWorkspace};
 /// data : numpy.ndarray[float64]
 ///    Input N-dimensional array.
 /// kernel : numpy.ndarray[float64]
-///    the kernel to use when doing the sliding operations (needs to have the same dimensionality 
+///    the kernel to use when doing the sliding operations (needs to have the same dimensionality
 ///    as ``data``).
 /// pad_mode: str
 ///    the padding mode to use. Can be 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
 ///    Constant value used to pad the borders of ``data`` (only used when pad_mode is 'constant').
-/// 
+///
 /// Returns
 /// ----------
 /// numpy.ndarray[float64]

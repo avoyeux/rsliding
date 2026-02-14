@@ -1,5 +1,5 @@
 //! Rust sliding operation library with the corresponding python bindings.
-//! Has a padding, convolution, sliding_mean, sliding_median, sliding_standard_deviation and 
+//! Has a padding, convolution, sliding_mean, sliding_median, sliding_standard_deviation and
 //! sliding_sigma_clipping function.
 //! Data can contain NaN values and the kernel weights. The sliding_median computes the sliding
 //! weighted median when there are weights in the kernel.
@@ -87,7 +87,7 @@ mod tests {
         padded.pad_input(data.view());
 
         // compute
-        sliding_mean(&mut padded, data.view_mut());
+        sliding_mean(&mut padded, data.view_mut(), true);
 
         // compare
         let expected_mean = arr2(&[
@@ -109,7 +109,7 @@ mod tests {
         padded.pad_input(data.view());
 
         // compute
-        sliding_mean(&padded, data.view_mut());
+        sliding_mean(&padded, data.view_mut(), true);
 
         // compare
         let expected_mean = arr2(&[
@@ -131,7 +131,7 @@ mod tests {
         padded.pad_input(data.view());
 
         // compute
-        sliding_mean(&mut padded, data.view_mut());
+        sliding_mean(&mut padded, data.view_mut(), true);
 
         // compare
         let expected_mean = arr2(&[
@@ -216,7 +216,7 @@ mod tests {
 
         // compute
         let mut mean_buffer = ArrayD::zeros(data.shape());
-        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut(), true);
 
         // compare
         let expected_mean = arr2(&[
@@ -238,7 +238,7 @@ mod tests {
 
         // compute
         let mut mean_buffer = ArrayD::zeros(data.shape());
-        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut(), true);
 
         // compare
         // compare
@@ -261,7 +261,7 @@ mod tests {
 
         // compute
         let mut mean_buffer = ArrayD::zeros(data.shape());
-        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut(), true);
 
         // compare
         let expected_mean = arr2(&[
@@ -284,7 +284,7 @@ mod tests {
 
         // compute
         let mut mean_buffer = ArrayD::zeros(data.shape());
-        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut(), true);
 
         // compare
         let std_0_0 = std_population(&[0., 0., 0., 0., 0., 2., 3., 5.]);
@@ -323,7 +323,7 @@ mod tests {
 
         // compute
         let mut mean_buffer = ArrayD::zeros(data.shape());
-        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut(), true);
 
         // compare
         let std_0_0 = std_population(&[0., 0., 0., 0., 2., 5.]);
@@ -362,7 +362,7 @@ mod tests {
 
         // compute
         let mut mean_buffer = ArrayD::zeros(data.shape());
-        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut());
+        sliding_standard_deviation(&mut padded, data.view_mut(), mean_buffer.view_mut(), true);
 
         // compare
         let std_0_0 = std_population(&[2., 3., 5.]);

@@ -23,10 +23,16 @@ use crate::core::sliding_sigma_clipping::{CenterMode, sliding_sigma_clipping};
 ///   Input N-dimensional array.
 /// kernel : numpy.ndarray[float64]
 ///    Kernel (weights) array with the same number of dimensions as ``data``.
+/// center_mode: str
+///   the sliding mode to use for the clipping. Can be 'mean' or 'median'.
 /// pad_mode: str
 ///    the padding mode to use. Can be 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
 ///    Constant value used to pad the borders of ``data``. Used when pad_mode is set to 'constant'.
+/// neumaier: bool
+///    Whether to use Neumaier summation for the sliding mean and standard deviation calculations.
+///    This can improve the numerical stability of the calculations, especially for large kernels or
+///    data with large values. However, it it will be slightly slower than the standard summation.
 /// sigma_upper: float | None
 ///    the upper sigma coefficient to use for the clipping. If None, no upper clipping is done.
 /// sigma_lower: float | None
@@ -50,6 +56,7 @@ pub fn py_sliding_sigma_clipping<'py>(
     center_mode: &str,
     pad_mode: &str,
     pad_value: f64,
+    neumaier: bool,
     sigma_upper: Option<f64>,
     sigma_lower: Option<f64>,
     max_iterations: Option<usize>,
@@ -106,6 +113,7 @@ pub fn py_sliding_sigma_clipping<'py>(
                         &sigma_lower,
                         &center_mode,
                         &max_iterations,
+                        neumaier,
                     )
                 })
             })
@@ -125,6 +133,7 @@ pub fn py_sliding_sigma_clipping<'py>(
                     &sigma_lower,
                     &center_mode,
                     &max_iterations,
+                    neumaier,
                 )
             })
         }

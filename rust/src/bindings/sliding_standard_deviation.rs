@@ -25,6 +25,10 @@ use crate::core::sliding_standard_deviation::sliding_standard_deviation;
 ///    the padding mode to use. Can be 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
 ///    Constant value used to pad the borders of ``data``. Used when pad_mode is set to 'constant'.
+/// neumaier: bool
+///    Whether to use Neumaier summation for the sliding mean and standard deviation calculations.
+///    This can improve the numerical stability of the calculations, especially for large kernels or
+///    data with large values. However, it it will be slightly slower than the standard summation.
 /// num_threads: int | None
 ///    The number of threads to used for the sliding operation. If set to None, all available
 ///    logical units are used.
@@ -41,6 +45,7 @@ pub fn py_sliding_standard_deviation<'py>(
     kernel: PyReadonlyArrayDyn<'py, f64>,
     pad_mode: &str,
     pad_value: f64,
+    neumaier: bool,
     num_threads: Option<usize>,
 ) -> PyResult<(Bound<'py, PyArrayDyn<f64>>, Bound<'py, PyArrayDyn<f64>>)> {
     let mut data_arr = py_array_to_array_d(&data)?;
@@ -81,6 +86,7 @@ pub fn py_sliding_standard_deviation<'py>(
                         &padded,
                         data_arr.view_mut(),
                         mean_buffer.view_mut(),
+                        neumaier,
                     );
                 })
             });
@@ -93,7 +99,12 @@ pub fn py_sliding_standard_deviation<'py>(
                 padded.pad_input(data_arr.view());
 
                 // sliding standard deviation
-                sliding_standard_deviation(&padded, data_arr.view_mut(), mean_buffer.view_mut());
+                sliding_standard_deviation(
+                    &padded,
+                    data_arr.view_mut(),
+                    mean_buffer.view_mut(),
+                    neumaier,
+                );
             });
         }
     }

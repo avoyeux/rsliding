@@ -40,7 +40,6 @@ impl SlidingWorkspace {
         kernel: ArrayD<f64>,
         padding_mode: PaddingMode,
     ) -> Result<Self, String> {
-
         let ndim = input_shape.len();
         let pad: Vec<usize> = kernel.shape().iter().map(|&k| k / 2).collect();
         let padded_shape = IxDyn(

@@ -24,7 +24,11 @@ use crate::core::padding::{PaddingMode, SlidingWorkspace};
 /// pad_mode: str
 ///    Padding mode to use. One of 'constant', 'reflect' or 'replicate'.
 /// pad_value : float64
-///    Constant value used to pad the borders of ``data``.
+///    Constant value used to pad the borders of ``data``. Used when pad_mode is set to 'constant'.
+/// neumaier: bool
+///    Whether to use Neumaier summation for the convolution calculation. This can improve the
+///    numerical stability of the calculations, especially for large kernels or data with large values.
+///    However, it it will be slightly slower than the standard summation.
 /// num_threads: int | None
 ///     the number of threads to use in the convolution. If None, uses the number of available
 ///     logical units.
@@ -40,6 +44,7 @@ pub fn py_convolution<'py>(
     kernel: PyReadonlyArrayDyn<'py, f64>,
     pad_mode: &str,
     pad_value: f64,
+    neumaier: bool,
     num_threads: Option<usize>,
 ) -> PyResult<Bound<'py, PyArrayDyn<f64>>> {
     let mut data_arr = py_array_to_array_d(&data)?;
@@ -80,7 +85,7 @@ pub fn py_convolution<'py>(
                     padded.pad_input(data_arr.view());
 
                     // convolution
-                    convolution(&padded, data_arr.view_mut());
+                    convolution(&padded, data_arr.view_mut(), neumaier);
                 })
             });
         }
@@ -92,7 +97,7 @@ pub fn py_convolution<'py>(
                 padded.pad_input(data_arr.view());
 
                 // convolution
-                convolution(&padded, data_arr.view_mut());
+                convolution(&padded, data_arr.view_mut(), neumaier);
             });
         }
     }

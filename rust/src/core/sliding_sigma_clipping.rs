@@ -29,6 +29,7 @@ pub fn sliding_sigma_clipping<'a>(
     sigma_lower: &Option<f64>,
     center_mode: &CenterMode,
     max_iterations: &Option<usize>,
+    neumaier: bool,
 ) -> ArrayD<bool> {
     let mut iterations: usize = 0;
     let mut mode_buffer = data.to_owned();
@@ -36,7 +37,12 @@ pub fn sliding_sigma_clipping<'a>(
 
     loop {
         // std
-        sliding_standard_deviation(padded, std_buffer.view_mut(), mode_buffer.view_mut());
+        sliding_standard_deviation(
+            padded,
+            std_buffer.view_mut(),
+            mode_buffer.view_mut(),
+            neumaier,
+        );
 
         // center
         match center_mode {
@@ -128,11 +134,11 @@ fn fill_n_mask(mut data: ArrayViewMutD<f64>, mode: ArrayViewD<f64>) -> ArrayD<bo
         .zip(data_slice)
         .zip(mode_slice)
         .for_each(|((m, x), &mu)| {
-            let is_nan = x.is_nan();
-
-            *m = is_nan;
-            if is_nan {
+            if x.is_nan() {
+                *m = true;
                 *x = mu;
+            } else {
+                *m = false;
             }
         });
     mask
