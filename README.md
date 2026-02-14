@@ -1,7 +1,8 @@
 # 'rsliding' package
 
 This python package contains utilities to compute a sliding sigma clipping, where the kernel can
-contain weights and the data can contain NaN values (has to be float64). \
+contain weights and the data can contain NaN values (has to be float64).
+
 The actual core code is in Rust.
 This package was created to have a less memory hungry sigma clipping code compared to the similar
 'sliding' python package (cf. https://github.com/avoyeux/sliding.git). It is also a few times 
@@ -26,7 +27,15 @@ source .venv/bin/activate
 or on Windows OS:
 ```bash
 python -m venv .venv
-source .venv\Scripts\activate
+
+# Command Prompt
+.venv\Scripts\activate
+
+# PowerShell
+.venv\Scripts\Activate.ps1
+
+# Git Bash or WSL
+source .venv/Scripts/activate
 ```
 #### Install package in virtual environnement (or on bare-metal - wouldn't recommend):
 ```bash
