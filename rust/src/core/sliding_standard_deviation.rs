@@ -14,26 +14,26 @@ use crate::core::utils::neumaier_add;
 /// If no valid values inside a kernel window, the output is set to NaN.
 /// Gives the sliding standard deviation and the sliding mean at the same time.
 pub fn sliding_standard_deviation<'a>(
-    padded: &SlidingWorkspace,
+    workspace: &SlidingWorkspace,
     mut data: ArrayViewMutD<'a, f64>,
     mut mean_buffer: ArrayViewMutD<'a, f64>,
     neumaier: bool,
 ) {
     // update mean buffer
-    sliding_mean(padded, mean_buffer.view_mut(), neumaier);
+    sliding_mean(workspace, mean_buffer.view_mut(), neumaier);
 
     // reset kernel index buffer
-    let padded_strides = padded.padded_buffer.strides();
+    let padded_strides = workspace.padded.strides();
     // Assume everything is contiguous and abort early if it is not.
-    let padded_slice = padded.padded_buffer.as_slice_memory_order().unwrap();
+    let padded_slice = workspace.padded.as_slice_memory_order().unwrap();
     let has_nan = padded_slice.iter().any(|v| v.is_nan());
     let out_slice = data.as_slice_memory_order_mut().unwrap();
     let mean_slice = mean_buffer.as_slice_memory_order().unwrap();
 
-    let k_offsets = &padded.kernel_offsets;
-    let k_weights = &padded.kernel_weights;
+    let k_offsets = &workspace.kernel_offsets;
+    let k_weights = &workspace.kernel_weights;
 
-    // a little less stable (always worked without errors on the data I tested so far).
+    // a little less stable
     if !neumaier {
         // NaN check (outside of loop for efficiency)
         if has_nan {
@@ -44,7 +44,7 @@ pub fn sliding_standard_deviation<'a>(
                 .for_each(|(out_linear, (out, mean))| {
                     let mut sum = 0.0;
                     let mut sum_weights = 0.0;
-                    let base = padded.base_offset_from_linear(out_linear, padded_strides);
+                    let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
                     for i in 0..k_offsets.len() {
                         let value = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
@@ -70,7 +70,7 @@ pub fn sliding_standard_deviation<'a>(
                 .for_each(|(out_linear, (out, mean))| {
                     let mut sum = 0.0;
                     let mut sum_weights = 0.0;
-                    let base = padded.base_offset_from_linear(out_linear, padded_strides);
+                    let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
                     for i in 0..k_offsets.len() {
                         let value = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
@@ -100,7 +100,7 @@ pub fn sliding_standard_deviation<'a>(
                     let mut sum_weights = 0.0;
                     let mut c = 0.0;
                     let mut c_w = 0.0;
-                    let base = padded.base_offset_from_linear(out_linear, padded_strides);
+                    let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
                     for i in 0..k_offsets.len() {
                         let value = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
@@ -128,7 +128,7 @@ pub fn sliding_standard_deviation<'a>(
                     let mut sum_weights = 0.0;
                     let mut c = 0.0;
                     let mut c_w = 0.0;
-                    let base = padded.base_offset_from_linear(out_linear, padded_strides);
+                    let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
                     for i in 0..k_offsets.len() {
                         let value = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };

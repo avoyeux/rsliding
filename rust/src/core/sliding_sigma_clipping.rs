@@ -23,7 +23,7 @@ pub enum CenterMode {
 /// a NaN.
 /// Returns a mask giving the positions where a value was swapped to the corresponding mode.
 pub fn sliding_sigma_clipping<'a>(
-    padded: &mut SlidingWorkspace,
+    workspace: &mut SlidingWorkspace,
     mut data: ArrayViewMutD<'a, f64>,
     sigma_upper: &Option<f64>,
     sigma_lower: &Option<f64>,
@@ -38,7 +38,7 @@ pub fn sliding_sigma_clipping<'a>(
     loop {
         // std
         sliding_standard_deviation(
-            padded,
+            workspace,
             std_buffer.view_mut(),
             mode_buffer.view_mut(),
             neumaier,
@@ -48,7 +48,7 @@ pub fn sliding_sigma_clipping<'a>(
         match center_mode {
             CenterMode::Mean => (),
             CenterMode::Median => {
-                sliding_median(padded, mode_buffer.view_mut());
+                sliding_median(workspace, mode_buffer.view_mut());
             }
         }
 
@@ -73,7 +73,7 @@ pub fn sliding_sigma_clipping<'a>(
         }
 
         // update padded buffer
-        padded.pad_input(data.view());
+        workspace.pad_input(data.view());
     }
     // mask of changed values
     fill_n_mask(data.view_mut(), mode_buffer.view())

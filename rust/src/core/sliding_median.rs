@@ -11,12 +11,12 @@ use crate::core::padding::SlidingWorkspace;
 /// Uses kernel values as non-negative weights and ignores NaNs.
 /// Kernel entries equal to 0 act as a mask (weight 0).
 /// Uses a non weighted partition when all weights (expect the filtered 0. values) are the same.
-pub fn sliding_median<'a>(padded: &SlidingWorkspace, mut data: ArrayViewMutD<'a, f64>) {
-    let padded_strides = padded.padded_buffer.strides();
-    let padded_slice = padded.padded_buffer.as_slice_memory_order().unwrap();
+pub fn sliding_median<'a>(workspace: &SlidingWorkspace, mut data: ArrayViewMutD<'a, f64>) {
+    let padded_strides = workspace.padded.strides();
+    let padded_slice = workspace.padded.as_slice_memory_order().unwrap();
     let out_slice = data.as_slice_memory_order_mut().unwrap();
-    let k_offsets = &padded.kernel_offsets;
-    let k_weights = &padded.kernel_weights;
+    let k_offsets = &workspace.kernel_offsets;
+    let k_weights = &workspace.kernel_weights;
 
     out_slice
         .par_iter_mut()
@@ -34,7 +34,7 @@ pub fn sliding_median<'a>(padded: &SlidingWorkspace, mut data: ArrayViewMutD<'a,
                 window_vals.clear();
                 window_weights.clear();
 
-                let base = padded.base_offset_from_linear(out_linear, padded_strides);
+                let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
                 for i in 0..k_offsets.len() {
                     let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };

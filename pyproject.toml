@@ -10,6 +10,7 @@ Rust code to be used in Python. Has sliding operations (padding, convolution, me
 standard deviation, sigma clipping) for float64 numpy data with NaN values and a kernel with
 weights.
 """
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Voyeux Alfred", email = "voyeuxalfred@gmail.com" }]
@@ -39,4 +40,5 @@ strip = true
 sdist-include = [
 	"python/src/rsliding/py.typed",
 	"python/src/rsliding/_bindings.pyi",
+	"README.md",
 ]

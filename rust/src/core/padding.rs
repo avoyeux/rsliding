@@ -18,7 +18,7 @@ pub enum PaddingMode {
 /// The workspace adds the padding and contains the different buffers needed for the sliding
 /// operations.
 pub struct SlidingWorkspace {
-    pub padded_buffer: ArrayD<f64>, // reused by padding operations
+    pub padded: ArrayD<f64>, // reused by padding operations
     pub kernel_offsets: Vec<isize>, // the offsets of the kernel elements in the padded buffer
     pub kernel_weights: Vec<f64>,   // the weights of the kernel
     ndim: usize,                    // number of dimensions
@@ -32,7 +32,7 @@ pub struct SlidingWorkspace {
 impl SlidingWorkspace {
     /// Creates a new SlidingWorkspace.
     /// Computes the offsets needed during the multithreaded sliding operations.
-    /// Also creates the padded_buffer (use the pad_input method to populate the padded buffer and
+    /// Also creates the padded data (use the pad_input method to populate the padded buffer and
     /// compute the padding (if needed).
     /// Keep in mind that the kernel needs to be contiguous.
     pub fn new(
@@ -60,7 +60,7 @@ impl SlidingWorkspace {
             ndim,
             pad,
             padding_mode,
-            padded_buffer: ArrayD::zeros(padded_shape),
+            padded: ArrayD::zeros(padded_shape),
             out_shape,
             kernel,
             kernel_offsets,
@@ -79,7 +79,7 @@ impl SlidingWorkspace {
         match self.padding_mode {
             PaddingMode::Constant(value) => {
                 if !self.filled {
-                    self.padded_buffer.fill(value);
+                    self.padded.fill(value);
                     self.filled = true; // only fill once since constant padding
                 }
             }
@@ -87,7 +87,7 @@ impl SlidingWorkspace {
         }
 
         // populate input inside the padded buffer
-        let mut window = self.padded_buffer.view_mut();
+        let mut window = self.padded.view_mut();
         for (axis, p) in self.pad.iter().enumerate() {
             let start = *p as isize;
             let end = start + self.out_shape[axis] as isize;
@@ -132,7 +132,7 @@ impl SlidingWorkspace {
 
             let core_len = self.out_shape[axis_idx];
             let axis = Axis(axis_idx);
-            let padded = self.padded_buffer.view_mut();
+            let padded = self.padded.view_mut();
             let (mut left_pad, tail) = padded.split_at(axis, pad);
             let (core, mut right_pad) = tail.split_at(axis, core_len);
 
@@ -178,7 +178,7 @@ impl SlidingWorkspace {
 
             let core_len = self.out_shape[axis_idx];
             let axis = Axis(axis_idx);
-            let padded = self.padded_buffer.view_mut();
+            let padded = self.padded.view_mut();
             let (mut left_pad, tail) = padded.split_at(axis, pad);
             let (core, mut right_pad) = tail.split_at(axis, core_len);
 
@@ -201,7 +201,7 @@ impl SlidingWorkspace {
     fn create_offsets(&mut self) {
         let mut idx = vec![0usize; self.ndim];
         let kernel_shape = self.kernel.shape().to_vec();
-        let padded_strides = self.padded_buffer.strides();
+        let padded_strides = self.padded.strides();
         let kernel_strides = self.kernel.strides();
         let kernel_slice = self.kernel.as_slice_memory_order().unwrap();
 

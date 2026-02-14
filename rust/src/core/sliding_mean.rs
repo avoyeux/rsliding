@@ -13,19 +13,19 @@ use crate::core::utils::neumaier_add;
 /// The NaN values are ignored.
 /// If no valid data inside a kernel, the corresponding output is set to NaN.
 pub fn sliding_mean<'a>(
-    padded: &SlidingWorkspace,
+    workspace: &SlidingWorkspace,
     mut data: ArrayViewMutD<'a, f64>,
     neumaier: bool,
 ) {
-    let padded_strides = padded.padded_buffer.strides();
-    let padded_slice = padded.padded_buffer.as_slice_memory_order().unwrap();
+    let padded_strides = workspace.padded.strides();
+    let padded_slice = workspace.padded.as_slice_memory_order().unwrap();
     let has_nan = padded_slice.iter().any(|v| v.is_nan());
     let out_slice = data.as_slice_memory_order_mut().unwrap();
 
-    let k_offsets = &padded.kernel_offsets;
-    let k_weights = &padded.kernel_weights;
+    let k_offsets = &workspace.kernel_offsets;
+    let k_weights = &workspace.kernel_weights;
 
-    // a little less stable (always worked without errors on the data I tested so far).
+    // a little less stable
     if !neumaier {
         // NaN check (outside of loop for efficiency)
         if has_nan {
@@ -35,7 +35,7 @@ pub fn sliding_mean<'a>(
                 .for_each(|(out_linear, out)| {
                     let mut sum = 0.0;
                     let mut weight_sum = 0.0;
-                    let base = padded.base_offset_from_linear(out_linear, padded_strides);
+                    let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
                     for i in 0..k_offsets.len() {
                         let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
@@ -59,7 +59,7 @@ pub fn sliding_mean<'a>(
                 .for_each(|(out_linear, out)| {
                     let mut sum = 0.0;
                     let mut weight_sum = 0.0;
-                    let base = padded.base_offset_from_linear(out_linear, padded_strides);
+                    let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
                     for i in 0..k_offsets.len() {
                         let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
@@ -87,7 +87,7 @@ pub fn sliding_mean<'a>(
                     let mut weight_sum = 0.0;
                     let mut c = 0.0;
                     let mut c_w = 0.0;
-                    let base = padded.base_offset_from_linear(out_linear, padded_strides);
+                    let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
                     for i in 0..k_offsets.len() {
                         let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
@@ -113,7 +113,7 @@ pub fn sliding_mean<'a>(
                     let mut weight_sum = 0.0;
                     let mut c = 0.0;
                     let mut c_w = 0.0;
-                    let base = padded.base_offset_from_linear(out_linear, padded_strides);
+                    let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
                     for i in 0..k_offsets.len() {
                         let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };

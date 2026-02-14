@@ -53,5 +53,5 @@ pub fn py_padding<'py>(
     padded.pad_input(data_arr.view());
 
     // return the padded buffer as a new array
-    array_d_to_py_array(py, padded.padded_buffer)
+    array_d_to_py_array(py, padded.padded)
 }
