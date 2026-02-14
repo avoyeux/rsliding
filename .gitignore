@@ -21,6 +21,10 @@
 **/.*/
 **/__pycache__/
 
+# WHITELIST wheel yml
+!.github/
+!.github/**
+
 # FILEs whitelisted
 !README.md
 !.gitignore
