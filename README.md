@@ -9,7 +9,8 @@ faster than the 'sliding' package equivalent (except in some cases when using th
 SlidingMean class).
 Check the **Functions** markdown section to know about the different available classes.
 
-**IMPORTANT:** the code only works if the kernel dimensions are odd.
+**IMPORTANT:** the code only works if the kernel dimensions are odd and has the same dimensionality than
+the input data.
 
 ## Install package
 
@@ -34,9 +35,9 @@ pip install rsliding
 
 ## Functions
 
-The *'sliding'* package has 6 different classes:
-- **'Padding'** which returns the padded data. Not really useful given np.pad might be more
-efficient and is already incorporated in all the other sliding operations. A Python binding exist just so that the user can check the results if wanted be.
+The *'rsliding'* package has 6 different classes:
+- **'Padding'** which returns the padded data. Not really useful given np.pad is way more
+efficient. A Python binding exist just so that the user can check the results if wanted be.
 - **'Convolution'** which lets you perform a convolution (NaN handling done).
 - **'SlidingMean'** which performs a sliding mean (NaN handling done).
 - **'SlidingMedian'** which performs a sliding median (NaN handling done).
@@ -73,6 +74,7 @@ clipped = SlidingSigmaClipping(
     borders='reflect',
     threads=1,
     masked_array=False,
+    neumaier=True,
 ).clipped
 ```
 
