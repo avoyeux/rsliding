@@ -21,31 +21,41 @@ pub fn sliding_median<'a>(padded: &SlidingWorkspace, mut data: ArrayViewMutD<'a,
     out_slice
         .par_iter_mut()
         .enumerate()
-        .for_each(|(out_linear, out)| {
-            let base = padded.base_offset_from_linear(out_linear, padded_strides);
+        .for_each_init(
+            || {
+                (
+                    // buffer for each thread
+                    Vec::with_capacity(k_offsets.len()),
+                    Vec::with_capacity(k_offsets.len()),
+                )
+            },
+            |(window_vals, window_weights), (out_linear, out)| {
+                // reset thread window buffers
+                window_vals.clear();
+                window_weights.clear();
 
-            let mut window_vals = Vec::with_capacity(k_offsets.len());
-            let mut window_weights = Vec::with_capacity(k_offsets.len());
+                let base = padded.base_offset_from_linear(out_linear, padded_strides);
 
-            for i in 0..k_offsets.len() {
-                let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
+                for i in 0..k_offsets.len() {
+                    let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
 
-                if !v.is_nan() {
-                    window_vals.push(v);
-                    window_weights.push(k_weights[i]);
+                    if !v.is_nan() {
+                        window_vals.push(v);
+                        window_weights.push(k_weights[i]);
+                    }
                 }
-            }
 
-            let median = if window_vals.is_empty() {
-                f64::NAN
-            } else if weights_all_equal(&window_weights) {
-                median_partition(&mut window_vals)
-            } else {
-                weighted_median_partition(&mut window_vals, &mut window_weights)
-            };
+                let median = if window_vals.is_empty() {
+                    f64::NAN
+                } else if weights_all_equal(&window_weights) {
+                    median_partition(window_vals)
+                } else {
+                    weighted_median_partition(window_vals, window_weights)
+                };
 
-            *out = median;
-        });
+                *out = median;
+            },
+        );
 }
 
 /// Checks if the kernel weights (expect the filtered 0. values) are all equal.
