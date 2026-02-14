@@ -54,9 +54,10 @@ fn weights_all_equal(weights: &[f64]) -> bool {
         return true;
     }
     let w0 = weights[0];
-    const EPS: f64 = 1e-12;
+    let max_w = weights.iter().map(|w| w.abs()).fold(1.0, f64::max);
+    let eps = f64::EPSILON * max_w;
     for &w in &weights[1..] {
-        if (w - w0).abs() > EPS * (1.0 + w0.abs()) {
+        if (w - w0).abs() > eps * (1.0 + w0.abs()) {
             return false;
         }
     }
@@ -118,7 +119,7 @@ fn weighted_median_partition(values: &mut [f64], weights: &mut [f64]) -> f64 {
     }
 
     let half = 0.5 * total_weight;
-    let eps = f64::EPSILON * total_weight.max(1.0) * 8.0;
+    let eps = f64::EPSILON * total_weight.max(1.0);
 
     let mut cum = 0.0;
     for i in 0..pairs.len() {
