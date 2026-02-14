@@ -19,7 +19,7 @@ jobs:
           args: --release --out dist
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-${{ matrix.os }}
           path: dist/*.whl
 
   publish:
@@ -28,7 +28,15 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-ubuntu-latest
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-windows-latest
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-macos-latest
           path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
