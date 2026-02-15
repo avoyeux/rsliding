@@ -11,7 +11,7 @@ standard deviation, sigma clipping) for float64 numpy data with NaN values and a
 weights.
 """
 license = { file = "LICENSE" }
-readme = { file = "README.md", content-type = "text/markdown" }
+readme = { file = "rust/README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 authors = [{ name = "Voyeux Alfred", email = "voyeuxalfred@gmail.com" }]
 classifiers = [
@@ -40,4 +40,5 @@ strip = true
 sdist-include = [
 	"python/src/rsliding/py.typed",
 	"python/src/rsliding/_bindings.pyi",
+	"rust/README.md",
 ]
