@@ -1,10 +1,10 @@
-# 'rsliding' package
+# `rsliding` package
 
 This python package contains utilities to compute a sliding sigma clipping, where the kernel can contain weights and the data can contain NaN values (has to be float64).
 
 The actual core code is in Rust.
 This package was created to have a less memory hungry sigma clipping code compared to the similar
-"sliding" python package (cf. https://github.com/avoyeux/sliding.git). It is also a few times faster than the 'sliding' package equivalent (except in some cases when using the Convolution or SlidingMean class).
+`sliding` python package (cf. https://github.com/avoyeux/sliding.git). It is also a few times faster than the `sliding` package equivalent (except in some cases when using the Convolution or SlidingMean class).
 Check the **Functions** markdown section to know about the different available classes.
 
 **IMPORTANT:** the code only works if the kernel dimensions are odd and has the same dimensionality
@@ -40,7 +40,7 @@ pip install rsliding
 
 ## Functions
 
-The *rsliding* package has 6 different classes:
+The `rsliding` package has 6 different classes:
 - **Padding** which returns the padded data. Not really useful given np.pad is way more efficient. A Python binding exist just so that the user can check the results if wanted be.
 - **Convolution** which lets you perform a convolution (NaN handling done).
 - **SlidingMean** which performs a sliding mean (NaN handling done).
