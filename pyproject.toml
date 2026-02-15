@@ -5,11 +5,7 @@ build-backend = "maturin"
 [project]
 name = "rsliding"
 version = "1.0.0"
-description = """
-Rust with Python bindings. Contains sliding (filtering) operations (padding, convolution, mean, median,
-standard deviation, sigma clipping) for float64 numpy data with NaN values and a kernel with
-weights.
-"""
+description = "Rust with Python bindings. Contains sliding (filtering) operations (padding, convolution, mean, median, standard deviation, sigma clipping) for float64 numpy data with NaN values and a kernel with weights."
 license = { file = "LICENSE" }
 readme = { file = "rust/README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
