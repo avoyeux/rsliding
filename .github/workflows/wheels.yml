@@ -7,9 +7,8 @@ on:
 
 jobs:
   build-wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels (cibuildwheel) on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
@@ -21,20 +20,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
+      - name: Build wheels with cibuildwheel
+        uses: pypa/cibuildwheel@v2
         with:
-          command: build
-          args: --release
+          output-directory: dist
         env:
-          # Python versions to build for
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
-
-          # Skip PyPy + musllinux (Alpine)
           CIBW_SKIP: "pp* *-musllinux*"
-
-          # Architectures
-          CIBW_ARCHS_WINDOWS: "AMD64 ARM64"
+          CIBW_ARCHS_WINDOWS: "x86_64 arm64"
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_BUILD_VERBOSITY: "1"
@@ -43,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
-          path: target/wheels/*.whl
+          path: dist/*.whl
 
   build-sdist:
     name: Build sdist
@@ -52,17 +45,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install maturin
+        run: python -m pip install --upgrade pip maturin
+
       - name: Build source distribution
-        uses: PyO3/maturin-action@v1
-        with:
-          command: sdist
+        run: |
+          mkdir -p dist
+          maturin build --sdist -o dist
 
       - name: Upload sdist
         uses: actions/upload-artifact@v4
         with:
           name: sdist
-          path: target/wheels/*.tar.gz
-
+          path: dist/*.tar.gz
   publish:
     name: Publish to PyPI
     needs:
@@ -74,9 +69,18 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist
+          path: artifacts
+
+      - name: Flatten artifacts into dist/
+        run: |
+          mkdir -p dist
+          find artifacts -type f \( -name "*.whl" -o -name "*.tar.gz" -o -name "*.zip" \) -exec cp -v {} dist/ \;
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dist/
+          skip-existing: true
+          verify-metadata: true
