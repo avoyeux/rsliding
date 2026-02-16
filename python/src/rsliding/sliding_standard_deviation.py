@@ -27,6 +27,9 @@ class SlidingStandardDeviation(BaseCheck):
     If no valid data in the given window, the output is set to NaN.
     Use the 'standard_deviation' property to access the sliding standard deviation result.
     Use the 'mean' property to access the sliding mean result.
+
+    NOTES: the standard deviation is done using the numerically stable two-pass algorithm.
+        For maximum  numerical stability, Neumaier's summation can be used if specified.
     """
 
     def __init__(
@@ -37,7 +40,7 @@ class SlidingStandardDeviation(BaseCheck):
             pad_value: float = 0.,
             force_contiguous: bool = True,
             threads: int | None = 1,
-            neumaier: bool = False,
+            neumaier: bool = True,
         ) -> None:
         """
         Does a sliding standard deviation of data with NaN values and a kernel with weights.
@@ -46,6 +49,8 @@ class SlidingStandardDeviation(BaseCheck):
         If no valid data in the given window, the output is set to NaN.
         Use the 'standard_deviation' property to access the sliding standard deviation result.
         Use the 'mean' property to access the sliding mean result.
+        NOTES: the standard deviation is done using the numerically stable two-pass algorithm.
+            For maximum  numerical stability, Neumaier's summation can be used if specified.
 
         Args:
             data (npt.NDArray[np.float64]): the data to compute the sliding standard deviation on.
@@ -60,8 +65,8 @@ class SlidingStandardDeviation(BaseCheck):
             threads (int | None, optional): the number of threads to use in the sliding operation.
                 If set to None, uses all the available logical cores. Defaults to 1.
             neumaier (bool, optional): whether to use the Neumaier algorithm for floating point
-                summation. Never tested a case where it would make a difference, but it is more
-                stable numerically. More expensive computationally. Defaults to False.
+                summation. While more expensive, it is more stable numerically (even more so than
+                pairwise or Kahan summation). Defaults to True.
         """
 
         self._data = data

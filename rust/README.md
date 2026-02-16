@@ -7,8 +7,11 @@ This package was created to have a less memory hungry sigma clipping code compar
 `sliding` python package (cf. https://github.com/avoyeux/sliding.git). It is also a few times faster than the `sliding` package equivalent (except in some cases when using the Convolution or SlidingMean class).
 Check the **Functions** markdown section to know about the different available classes.
 
-**IMPORTANT:** the code only works if the kernel dimensions are odd and has the same dimensionality
-than the input data.
+For high numerical stability (c.f. https://dl.acm.org/doi/epdf/10.1145/359146.359152), the standard deviation is computed using the two-pass algorithm (i.e. mean computation then variance). Furthermore, the user can decide to use 'Neumaier's summation' for the standard deviation and mean computation (highest numerical stability that I know of). While the Welford algorithm is faster and quite stable, I did find (from literature and tests) that the two-pass algorithm is more stable, even more so when using Neumaier's summation.
+
+**IMPORTANT:** the code only works if the kernel dimensions are odd and has the same dimensionality than the input data.
+
+**NOTES**: for the standard deviation computation, compared to using numpy.std on each window, the ``rsliding`` implementation should be a little less numerically stable if 'neumaier=False'. This is because, while numpy.std seem to also use the two-pass algorithm (c.f. https://numpy.org/doc/stable/reference/generated/numpy.std.html), numpy functions also implement pairwise summation (not done in ``rsliding``). That being said, Neumaier's summation is more stable than pairwise summation and, as such, when 'neumaier=True`, the 'SlidingMean' and 'SlidingStandardDeviation' implementation should be more numerically stable than implementing sliding operations using np.mean and np.std (or nanmean/nanstd).
 
 ## Install package
 
