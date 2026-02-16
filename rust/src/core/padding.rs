@@ -18,7 +18,7 @@ pub enum PaddingMode {
 /// The workspace adds the padding and contains the different buffers needed for the sliding
 /// operations.
 pub struct SlidingWorkspace {
-    pub padded: ArrayD<f64>, // reused by padding operations
+    pub padded: ArrayD<f64>,        // reused by padding operations
     pub kernel_offsets: Vec<isize>, // the offsets of the kernel elements in the padded buffer
     pub kernel_weights: Vec<f64>,   // the weights of the kernel
     ndim: usize,                    // number of dimensions

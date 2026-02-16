@@ -18,44 +18,41 @@ pub fn sliding_median<'a>(workspace: &SlidingWorkspace, mut data: ArrayViewMutD<
     let k_offsets = &workspace.kernel_offsets;
     let k_weights = &workspace.kernel_weights;
 
-    out_slice
-        .par_iter_mut()
-        .enumerate()
-        .for_each_init(
-            || {
-                (
-                    // buffer for each thread
-                    Vec::with_capacity(k_offsets.len()),
-                    Vec::with_capacity(k_offsets.len()),
-                )
-            },
-            |(window_vals, window_weights), (out_linear, out)| {
-                // reset thread window buffers
-                window_vals.clear();
-                window_weights.clear();
+    out_slice.par_iter_mut().enumerate().for_each_init(
+        || {
+            (
+                // buffer for each thread
+                Vec::with_capacity(k_offsets.len()),
+                Vec::with_capacity(k_offsets.len()),
+            )
+        },
+        |(window_vals, window_weights), (out_linear, out)| {
+            // reset thread window buffers
+            window_vals.clear();
+            window_weights.clear();
 
-                let base = workspace.base_offset_from_linear(out_linear, padded_strides);
+            let base = workspace.base_offset_from_linear(out_linear, padded_strides);
 
-                for i in 0..k_offsets.len() {
-                    let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
+            for i in 0..k_offsets.len() {
+                let v = unsafe { *padded_slice.as_ptr().offset(base + k_offsets[i]) };
 
-                    if !v.is_nan() {
-                        window_vals.push(v);
-                        window_weights.push(k_weights[i]);
-                    }
+                if !v.is_nan() {
+                    window_vals.push(v);
+                    window_weights.push(k_weights[i]);
                 }
+            }
 
-                let median = if window_vals.is_empty() {
-                    f64::NAN
-                } else if weights_all_equal(&window_weights) {
-                    median_partition(window_vals)
-                } else {
-                    weighted_median_partition(window_vals, window_weights)
-                };
+            let median = if window_vals.is_empty() {
+                f64::NAN
+            } else if weights_all_equal(&window_weights) {
+                median_partition(window_vals)
+            } else {
+                weighted_median_partition(window_vals, window_weights)
+            };
 
-                *out = median;
-            },
-        );
+            *out = median;
+        },
+    );
 }
 
 /// Checks if the kernel weights (expect the filtered 0. values) are all equal.
