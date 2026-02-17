@@ -18,9 +18,6 @@ jobs:
           - os: ubuntu-latest
             cibw_platform: linux
             cibw_arch: aarch64
-          # - os: ubuntu-latest
-          #   cibw_platform: linux
-          #   cibw_arch: arm64
           - os: macos-latest
             cibw_platform: macos
             cibw_arch: arm64
@@ -30,12 +27,6 @@ jobs:
           - os: windows-latest
             cibw_platform: windows
             cibw_arch: x86
-          # - os: windows-latest  # ! This should be fine, need to find a solution as rust is being created in aarch64
-          #   cibw_platform: windows
-          #   cibw_arch: ARM64
-          # - os: windows-latest  # ! this shouldn't work but tried as rustc is being created in aarch64
-          #   cibw_platform: windows
-          #   cibw_arch: aarch64
           - os: windows-latest
             cibw_platform: windows
             cibw_arch: AMD64
@@ -81,8 +72,6 @@ jobs:
           CIBW_ARCHS_LINUX: ${{ matrix.cibw_arch }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.cibw_arch }}
           CIBW_ARCHS_MACOS: ${{ matrix.cibw_arch }}
-          # If you need to override the manylinux image, uncomment and set below:
-          # CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_SKIP: "*musllinux*"
           CIBW_BEFORE_BUILD_LINUX: |
             set -eux
