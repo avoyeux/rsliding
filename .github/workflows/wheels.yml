@@ -30,12 +30,12 @@ jobs:
           - os: windows-latest
             cibw_platform: windows
             cibw_arch: x86
-          # - os: windows-latest
+          # - os: windows-latest  # ! This should be fine, need to find a solution as rust is being created in aarch64
           #   cibw_platform: windows
           #   cibw_arch: ARM64
-          - os: windows-latest
-            cibw_platform: windows
-            cibw_arch: aarch64
+          # - os: windows-latest  # ! this shouldn't work but tried as rustc is being created in aarch64
+          #   cibw_platform: windows
+          #   cibw_arch: aarch64
           - os: windows-latest
             cibw_platform: windows
             cibw_arch: AMD64
@@ -91,12 +91,20 @@ jobs:
             rustup default stable
           CIBW_BUILD_VERBOSITY: 2
 
-      - name: Show produced wheels
+      - name: Show produced wheels (Unix)
+        if: runner.os != 'Windows'
         run: |
           ls -la dist || true
           for w in dist/*.whl; do
-            echo "== $w ==" || true
+            echo "== $w =="
           done
+        shell: bash
+
+      - name: Show produced wheels (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path dist -Filter *.whl | ForEach-Object { Write-Output ("== {0} ==" -f $_.FullName) }
 
       - uses: actions/upload-artifact@v6
         with:
