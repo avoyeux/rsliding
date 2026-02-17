@@ -42,6 +42,7 @@ source .venv/Scripts/activate
 #### Install package in virtual environnement (or on bare-metal - wouldn't recommend):
 
 ```bash
+pip install --upgrade pip
 pip install rsliding
 ```
 
