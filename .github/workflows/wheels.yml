@@ -44,6 +44,22 @@ jobs:
       - name: Install cibuildwheel
         run: python -m pip install --upgrade pip setuptools wheel cibuildwheel==3.3.1
 
+      - name: Install Rust on Windows
+        if: matrix.cibw_platform == 'windows'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://win.rustup.rs -OutFile rustup-init.exe
+          .\rustup-init.exe -y
+          Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\\.cargo\\bin"
+
+      - name: Install Rust on macOS x86_64 (required for cross-target)
+        if: matrix.cibw_platform == 'macos' && matrix.cibw_arch == 'x86_64'
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          rustup default stable
+          rustup target add x86_64-apple-darwin
+
       - name: Build wheels with cibuildwheel
         run: python -m cibuildwheel --output-dir dist
         env:
@@ -53,8 +69,13 @@ jobs:
           CIBW_ARCHS_MACOS: ${{ matrix.cibw_arch }}
           # If you need to override the manylinux image, uncomment and set below:
           # CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
-          CIBW_SKIP: "musllinux"
-          CIBW_BUILD_VERBOSITY: 1
+          CIBW_SKIP: "*musllinux*"
+          CIBW_BEFORE_BUILD_LINUX: |
+            set -eux
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            export PATH="$HOME/.cargo/bin:$PATH"
+            rustup default stable
+          CIBW_BUILD_VERBOSITY: 2
 
       - name: Show produced wheels
         run: |
@@ -65,7 +86,7 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         with:
-          name: wheels-${{ matrix.os }}-${{ matrix.target }}
+          name: wheels-${{ matrix.os }}-${{ matrix.cibw_arch }}
           path: dist/*.whl
 
   publish:
