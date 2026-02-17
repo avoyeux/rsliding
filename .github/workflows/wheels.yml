@@ -13,22 +13,28 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: x86_64
             cibw_platform: linux
             cibw_arch: x86_64
+            # manylinux_image: manylinux_2_28
           - os: ubuntu-latest
-            target: aarch64
             cibw_platform: linux
             cibw_arch: aarch64
-          - os: windows-latest
-            target: x86_64
-            cibw_platform: windows
-            cibw_arch: x86_64
+            # manylinux_image: manylinux_2_28
           - os: macos-latest
-            target: arm64
             cibw_platform: macos
             cibw_arch: arm64
-
+          - os: macos-latest
+            cibw_platform: macos
+            cibw_arch: x86_64
+          - os: windows-latest
+            cibw_platform: windows
+            cibw_arch: x86
+          - os: windows-latest
+            cibw_platform: windows
+            cibw_arch: ARM64
+          - os: windows-latest
+            cibw_platform: windows
+            cibw_arch: AMD64
     steps:
       - uses: actions/checkout@v6
 
@@ -47,6 +53,7 @@ jobs:
           CIBW_ARCHS_MACOS: ${{ matrix.cibw_arch }}
           # If you need to override the manylinux image, uncomment and set below:
           # CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_SKIP: "musllinux"
           CIBW_BUILD_VERBOSITY: 1
 
       - name: Show produced wheels
