@@ -16,25 +16,47 @@ jobs:
             target: x86_64
             cibw_platform: linux
             cibw_arch: x86_64
+            # manylinux_image: manylinux_2_28
           - os: ubuntu-latest
             target: aarch64
             cibw_platform: linux
             cibw_arch: aarch64
+            # manylinux_image: manylinux_2_28
           - os: windows-latest
             target: x86_64
             cibw_platform: windows
             cibw_arch: x86_64
+          - os: windows-latest
+            target: amd64
+            cibw_platform: windows
+            cibw_arch: amd64
           - os: macos-latest
             target: arm64
             cibw_platform: macos
             cibw_arch: arm64
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: PyO3/maturin-action@v1
+      - uses: actions/checkout@v6
+
+      - name: Build wheels with cibuildwheel
+        uses: pypa/cibuildwheel@v3
         with:
-          command: build
-          args: --release --out dist
+          output-directory: dist
+        env:
+          CIBW_PLATFORM: ${{ matrix.cibw_platform }}
+          CIBW_ARCHS_LINUX: ${{ matrix.cibw_arch }}
+          CIBW_ARCHS_WINDOWS: ${{ matrix.cibw_arch }}
+          CIBW_ARCHS_MACOS: ${{ matrix.cibw_arch }}
+          # CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_BUILD_VERBOSITY: 1
+
+      - name: Show produced wheels
+        run: |
+          ls -la dist || true
+          for w in dist/*.whl; do
+            echo "== $w ==" || true
+          done
+
       - uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.target }}
@@ -47,15 +69,17 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           path: dist
-      # - uses: actions/download-artifact@v7
-      #   with:
-      #     name: wheels-windows-latest
-      #     path: dist
-      # - uses: actions/download-artifact@v7
-      #   with:
-      #     name: wheels-macos-latest
-      #     path: dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Gather wheels into flat dir
+        run: |
+          mkdir -p dist_flat
+          find dist -type f -name "*.whl" -exec cp -v {} dist_flat/ \;
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dist_flat
+          skip-existing: true
+          verify-metadata: true
