@@ -1,86 +1,61 @@
-name: Build and publish wheels
+name: Build and Publish Wheels
 
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
 
 jobs:
-  build-wheels:
-    name: Build wheels (cibuildwheel) on ${{ matrix.os }}
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
+        include:
+          - os: ubuntu-latest
+            target: x86_64
+            cibw_platform: linux
+            cibw_arch: x86_64
+          - os: ubuntu-latest
+            target: aarch64
+            cibw_platform: linux
+            cibw_arch: aarch64
+          - os: windows-latest
+            target: x86_64
+            cibw_platform: windows
+            cibw_arch: x86_64
+          - os: macos-latest
+            target: arm64
+            cibw_platform: macos
+            cibw_arch: arm64
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Build wheels with cibuildwheel
-        uses: pypa/cibuildwheel@v3.3.1
+      - uses: PyO3/maturin-action@v1
         with:
-          output-directory: dist
-        env:
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
-          CIBW_SKIP: "pp* *-musllinux*"
-          CIBW_ARCHS_WINDOWS: "x86_64 arm64"
-          CIBW_ARCHS_LINUX: "x86_64 aarch64"
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
-          CIBW_BUILD_VERBOSITY: "1"
-
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
+          command: build
+          args: --release --out dist
+      - uses: actions/upload-artifact@v6
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-${{ matrix.os }}-${{ matrix.target }}
           path: dist/*.whl
 
-  build-sdist:
-    name: Build sdist
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install maturin
-        run: python -m pip install --upgrade pip maturin
-
-      - name: Build source distribution
-        run: |
-          mkdir -p dist
-          maturin build --sdist -o dist
-
-      - name: Upload sdist
-        uses: actions/upload-artifact@v4
-        with:
-          name: sdist
-          path: dist/*.tar.gz
   publish:
-    name: Publish to PyPI
-    needs:
-      - build-wheels
-      - build-sdist
+    needs: build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
-          path: artifacts
-
-      - name: Flatten artifacts into dist/
-        run: |
-          mkdir -p dist
-          find artifacts -type f \( -name "*.whl" -o -name "*.tar.gz" -o -name "*.zip" \) -exec cp -v {} dist/ \;
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+          path: dist
+      # - uses: actions/download-artifact@v7
+      #   with:
+      #     name: wheels-windows-latest
+      #     path: dist
+      # - uses: actions/download-artifact@v7
+      #   with:
+      #     name: wheels-macos-latest
+      #     path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: dist/
-          skip-existing: true
-          verify-metadata: true
