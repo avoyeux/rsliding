@@ -18,9 +18,9 @@ jobs:
           - os: ubuntu-latest
             cibw_platform: linux
             cibw_arch: aarch64
-          - os: ubuntu-latest
-            cibw_platform: linux
-            cibw_arch: arm64
+          # - os: ubuntu-latest
+          #   cibw_platform: linux
+          #   cibw_arch: arm64
           - os: macos-latest
             cibw_platform: macos
             cibw_arch: arm64
