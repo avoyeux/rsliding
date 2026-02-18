@@ -82,18 +82,41 @@ jobs:
 
       - name: Show produced wheels (Unix)
         if: runner.os != 'Windows'
+        shell: bash
         run: |
           ls -la dist || true
           for w in dist/*.whl; do
             echo "== $w =="
           done
-        shell: bash
 
       - name: Show produced wheels (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           Get-ChildItem -Path dist -Filter *.whl | ForEach-Object { Write-Output ("== {0} ==" -f $_.FullName) }
+
+      - name: Test built wheels with pytest (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "CPU Architecture: $(uname -m)"
+          echo "OS Version: $(uname -a)"
+          echo "Python version: $(python --version)"
+
+          python -m pip install pytest
+          python -m pytest -s -v tests/
+      
+      - name: Test built wheels with pytest (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Output "CPU Architecture: $env:PROCESSOR_ARCHITECTURE"
+          Write-Output "OS Version: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Caption)"
+          Write-Output "OS Version Details: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Version)"
+          Write-Output "Python version: $(python --version)"
+
+          python -m pip install pytest
+          python -m pytest -s -v tests/
 
       - uses: actions/upload-artifact@v6
         with:
