@@ -78,6 +78,10 @@ jobs:
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
             export PATH="$HOME/.cargo/bin:$PATH"
             rustup default stable
+          CIBW_TEST_COMMAND: |            
+            python -c "import glob,sys,subprocess; ws=glob.glob('dist/*.whl'); assert ws, 'no wheel found'; [subprocess.check_call([sys.executable,'-m','pip','install',w]) for w in ws]"
+            python -m pip install pytest
+            pytest -q tests
           CIBW_BUILD_VERBOSITY: 2
 
       - name: Show produced wheels (Unix)
@@ -95,35 +99,35 @@ jobs:
         run: |
           Get-ChildItem -Path dist -Filter *.whl | ForEach-Object { Write-Output ("== {0} ==" -f $_.FullName) }
 
-      - name: Test built wheels with pytest (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          echo "CPU Architecture: $(uname -m)"
-          echo "OS Version: $(uname -a)"
-          echo "Python version: $(python3 --version)"
+      # - name: Test built wheels with pytest (Unix)
+      #   if: runner.os != 'Windows'
+      #   shell: bash
+      #   run: |
+      #     echo "CPU Architecture: $(uname -m)"
+      #     echo "OS Version: $(uname -a)"
+      #     echo "Python version: $(python3 --version)"
 
-          python3 -m venv .venv
-          source .venv/bin/activate
-          pip install dist/*.whl
-          pip install pytest
-          pytest -s -v tests/
-          deactivate
+      #     python3 -m venv .venv
+      #     source .venv/bin/activate
+      #     pip install --upgrade pip
+      #     pip install dist/*.whl
+      #     pip install pytest
+      #     pytest -s -v tests/
+      #     deactivate
       
-      - name: Test built wheels with pytest (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Write-Output "CPU Architecture: $env:PROCESSOR_ARCHITECTURE"
-          Write-Output "OS Version: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Caption)"
-          Write-Output "OS Version Details: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Version)"
-          Write-Output "Python version: $(python --version)"
+      # - name: Test built wheels with pytest (Windows)
+      #   if: runner.os == 'Windows'
+      #   shell: pwsh
+      #   run: |
+      #     Write-Output "CPU Architecture: $env:PROCESSOR_ARCHITECTURE"
+      #     Write-Output "OS Version: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Caption)"
+      #     Write-Output "OS Version Details: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Version)"
+      #     Write-Output "Python version: $(python --version)"
 
-          $wheels = Get-ChildItem -Path dist -Filter *.whl | Select-Object -ExpandProperty FullName
-          python -m pip install $wheels
-          python -m pip install pytest
-          python -m pytest -s -v tests/
-          deactivate
+      #     $wheels = Get-ChildItem -Path dist -Filter *.whl | Select-Object -ExpandProperty FullName
+      #     python -m pip install $wheels
+      #     python -m pip install pytest
+      #     python -m pytest -s -v tests/
 
       - uses: actions/upload-artifact@v6
         with:
