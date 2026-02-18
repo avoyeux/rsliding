@@ -103,6 +103,7 @@ jobs:
           echo "OS Version: $(uname -a)"
           echo "Python version: $(python --version)"
 
+          python -m pip install dist/*.whl
           python -m pip install pytest
           python -m pytest -s -v tests/
       
@@ -115,6 +116,7 @@ jobs:
           Write-Output "OS Version Details: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Version)"
           Write-Output "Python version: $(python --version)"
 
+          python -m pip install dist/*.whl
           python -m pip install pytest
           python -m pytest -s -v tests/
 
