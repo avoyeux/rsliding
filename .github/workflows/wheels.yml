@@ -116,9 +116,9 @@ jobs:
           Write-Output "OS Version Details: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Version)"
           Write-Output "Python version: $(python --version)"
 
-          python -m pip install dist/*.whl
-          python -m pip install pytest
-          python -m pytest -s -v tests/
+          python3 -m pip install dist/*.whl
+          python3 -m pip install pytest
+          python3 -m pytest -s -v tests/
 
       - uses: actions/upload-artifact@v6
         with:
