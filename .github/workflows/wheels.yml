@@ -67,7 +67,7 @@ jobs:
         run: python -m cibuildwheel --output-dir dist
         env:
           CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
-          MACOSX_DEPLOYMENT_TARGET: 10.12
+          MACOSX_DEPLOYMENT_TARGET: 11
           CIBW_PLATFORM: ${{ matrix.cibw_platform }}
           CIBW_ARCHS_LINUX: ${{ matrix.cibw_arch }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.cibw_arch }}
