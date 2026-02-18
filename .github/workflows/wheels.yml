@@ -101,11 +101,14 @@ jobs:
         run: |
           echo "CPU Architecture: $(uname -m)"
           echo "OS Version: $(uname -a)"
-          echo "Python version: $(python --version)"
+          echo "Python version: $(python3 --version)"
 
-          python3 -m pip install dist/*.whl
-          python3 -m pip install pytest
-          python3 -m pytest -s -v tests/
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install dist/*.whl
+          pip install pytest
+          pytest -s -v tests/
+          .venv/bin/deactivate
       
       - name: Test built wheels with pytest (Windows)
         if: runner.os == 'Windows'
@@ -116,7 +119,8 @@ jobs:
           Write-Output "OS Version Details: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Version)"
           Write-Output "Python version: $(python --version)"
 
-          python -m pip install dist/*.whl
+          $wheels = Get-ChildItem -Path dist -Filter *.whl | Select-Object -ExpandProperty FullName
+          python -m pip install $wheels
           python -m pip install pytest
           python -m pytest -s -v tests/
 
