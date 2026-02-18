@@ -6,6 +6,8 @@
 !rust/**/
 !python/
 !python/**/
+!tests/
+!tests/**/
 
 # TYPEs whitelist
 !**/*.rs
@@ -23,7 +25,7 @@
 
 # WHITELIST wheel yml
 !.github/
-!.github/**
+!.github/**/
 
 # FILEs whitelisted
 !README.md
