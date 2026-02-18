@@ -79,7 +79,6 @@ jobs:
             export PATH="$HOME/.cargo/bin:$PATH"
             rustup default stable
           CIBW_TEST_COMMAND: |            
-            python -c "import glob,sys,subprocess; ws=glob.glob('dist/*.whl'); assert ws, 'no wheel found'; [subprocess.check_call([sys.executable,'-m','pip','install',w]) for w in ws]"
             python -m pip install pytest
             pytest -q tests
           CIBW_BUILD_VERBOSITY: 2
