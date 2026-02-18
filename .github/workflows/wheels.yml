@@ -108,7 +108,7 @@ jobs:
           pip install dist/*.whl
           pip install pytest
           pytest -s -v tests/
-          .venv/bin/deactivate
+          deactivate
       
       - name: Test built wheels with pytest (Windows)
         if: runner.os == 'Windows'
@@ -123,6 +123,7 @@ jobs:
           python -m pip install $wheels
           python -m pip install pytest
           python -m pytest -s -v tests/
+          deactivate
 
       - uses: actions/upload-artifact@v6
         with:
