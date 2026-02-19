@@ -98,7 +98,7 @@ jobs:
           CIBW_TEST_COMMAND: |            
             python -m pip install pytest
             python -c "import os,sys,pathlib; print('cwd=',os.getcwd()); print('project=', r'{project}'); print('project_exists=', pathlib.Path(r'{project}').exists()); print('entries=', [p.name for p in pathlib.Path(r'{project}').iterdir()]); print('test_files=', [str(p) for p in pathlib.Path(r'{project}').glob('**/test*.py')]); import pkgutil; print('rsliding importable=', pkgutil.find_loader('rsliding') is not None)"
-            pytest -s -v {project}/tests/test_known_arrays.py
+            pytest -s -v {project}/tests/test_known_values.py
           CIBW_BUILD_VERBOSITY: 2
 
       - name: Show produced wheels (Unix)
