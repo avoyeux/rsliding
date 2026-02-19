@@ -63,22 +63,22 @@ jobs:
         if: ${{ matrix.cibw_platform == 'linux' && matrix.cibw_arch != 'x86_64' }}      
         uses: docker/setup-buildx-action@v2
 
-      - name: Pre-pull manylinux image (retry)
-        if: matrix.cibw_platform == 'linux' && matrix.cibw_arch == 'x86_64'
-        shell: bash
-        run: |
-          set -eux
-          IMAGE=quay.io/pypa/manylinux_2_28_x86_64:2026.01.04-1
-          for i in 1 2 3 4 5; do
-            echo "Pulling $IMAGE (attempt $i)"
-            if docker pull "$IMAGE"; then
-              echo "Pulled $IMAGE"
-              break
-            else
-              echo "docker pull failed (attempt $i). Retrying..."
-              sleep $((i * 5))
-            fi
-          done
+      # - name: Pre-pull manylinux image (retry)
+      #   if: matrix.cibw_platform == 'linux' && matrix.cibw_arch == 'x86_64'
+      #   shell: bash
+      #   run: |
+      #     set -eux
+      #     IMAGE=quay.io/pypa/manylinux_2_28_x86_64:2026.01.04-1
+      #     for i in 1 2 3 4 5; do
+      #       echo "Pulling $IMAGE (attempt $i)"
+      #       if docker pull "$IMAGE"; then
+      #         echo "Pulled $IMAGE"
+      #         break
+      #       else
+      #         echo "docker pull failed (attempt $i). Retrying..."
+      #         sleep $((i * 5))
+      #       fi
+      #     done
 
       - name: Build wheels with cibuildwheel
         run: python -m cibuildwheel --output-dir dist
