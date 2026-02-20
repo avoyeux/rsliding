@@ -63,23 +63,6 @@ jobs:
         if: ${{ matrix.cibw_platform == 'linux' && matrix.cibw_arch != 'x86_64' }}      
         uses: docker/setup-buildx-action@v2
 
-      # - name: Pre-pull manylinux image (retry)
-      #   if: matrix.cibw_platform == 'linux' && matrix.cibw_arch == 'x86_64'
-      #   shell: bash
-      #   run: |
-      #     set -eux
-      #     IMAGE=quay.io/pypa/manylinux_2_28_x86_64:2026.01.04-1
-      #     for i in 1 2 3 4 5; do
-      #       echo "Pulling $IMAGE (attempt $i)"
-      #       if docker pull "$IMAGE"; then
-      #         echo "Pulled $IMAGE"
-      #         break
-      #       else
-      #         echo "docker pull failed (attempt $i). Retrying..."
-      #         sleep $((i * 5))
-      #       fi
-      #     done
-
       - name: Build wheels with cibuildwheel
         run: python -m cibuildwheel --output-dir dist
         env:
@@ -97,7 +80,6 @@ jobs:
             rustup default stable
           CIBW_TEST_COMMAND: |            
             python -m pip install pytest
-            python -c "import os,sys,pathlib; print('cwd=',os.getcwd()); print('project=', r'{project}'); print('project_exists=', pathlib.Path(r'{project}').exists()); print('entries=', [p.name for p in pathlib.Path(r'{project}').iterdir()]); print('test_files=', [str(p) for p in pathlib.Path(r'{project}').glob('**/test*.py')]); import pkgutil; print('rsliding importable=', pkgutil.find_loader('rsliding') is not None)"
             pytest -s -v {project}/tests/test_known_values.py
           CIBW_BUILD_VERBOSITY: 2
 
@@ -115,36 +97,6 @@ jobs:
         shell: pwsh
         run: |
           Get-ChildItem -Path dist -Filter *.whl | ForEach-Object { Write-Output ("== {0} ==" -f $_.FullName) }
-
-      # - name: Test built wheels with pytest (Unix)
-      #   if: runner.os != 'Windows'
-      #   shell: bash
-      #   run: |
-      #     echo "CPU Architecture: $(uname -m)"
-      #     echo "OS Version: $(uname -a)"
-      #     echo "Python version: $(python3 --version)"
-
-      #     python3 -m venv .venv
-      #     source .venv/bin/activate
-      #     pip install --upgrade pip
-      #     pip install dist/*.whl
-      #     pip install pytest
-      #     pytest -s -v tests/
-      #     deactivate
-      
-      # - name: Test built wheels with pytest (Windows)
-      #   if: runner.os == 'Windows'
-      #   shell: pwsh
-      #   run: |
-      #     Write-Output "CPU Architecture: $env:PROCESSOR_ARCHITECTURE"
-      #     Write-Output "OS Version: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Caption)"
-      #     Write-Output "OS Version Details: $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Version)"
-      #     Write-Output "Python version: $(python --version)"
-
-      #     $wheels = Get-ChildItem -Path dist -Filter *.whl | Select-Object -ExpandProperty FullName
-      #     python -m pip install $wheels
-      #     python -m pip install pytest
-      #     python -m pytest -s -v tests/
 
       - uses: actions/upload-artifact@v6
         with:
