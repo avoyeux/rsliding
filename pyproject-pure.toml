@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rsliding"
+version = "2.0.0"
+description = "Sliding sigma-clipping, mean, median and standard deviation utilities."
+authors = [
+    { name = "Voyeux Alfred", email = "voyeuxalfred@gmail.com" },
+    { name = "Auchere Frederic" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=2.2.6",
+    "numba>=0.63.1",
+    "scipy>=1.15.3",
+    "opencv-python>=4.13",
+    "threadpoolctl>=3.6.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "python/src"}
+
+[tool.setuptools.packages.find]
+where = ["python/src"]
+
+[tool.setuptools.package-data]
+"rsliding" = ["py.typed"]

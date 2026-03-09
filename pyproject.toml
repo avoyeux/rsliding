@@ -4,11 +4,11 @@ build-backend = "maturin"
 
 [project]
 name = "rsliding"
-version = "1.0.1"
+version = "2.0.0"
 description = "Rust with Python bindings. Contains sliding (filtering) operations (padding, convolution, mean, median, standard deviation, sigma clipping) for float64 numpy data with NaN values and a kernel with weights."
 license = { file = "LICENSE" }
 readme = { file = "rust/README.md", content-type = "text/markdown" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "Voyeux Alfred", email = "voyeuxalfred@gmail.com" }]
 classifiers = [
 	"Programming Language :: Python :: 3",
@@ -20,7 +20,7 @@ classifiers = [
 	"Operating System :: MacOS",
 	"Operating System :: POSIX :: Linux",
 ]
-dependencies = ["numpy>=1.24"]
+dependencies = ["numpy>=2.2.6"]
 
 [project.urls]
 Homepage = "https://github.com/avoyeux/rsliding"

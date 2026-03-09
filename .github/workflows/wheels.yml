@@ -3,7 +3,7 @@ name: Build and Publish Wheels
 on:
   push:
     tags:
-      - 'v*'
+      - 'v2.*'
 
 jobs:
   build:
@@ -103,11 +103,30 @@ jobs:
           name: wheels-${{ matrix.os }}-${{ matrix.cibw_arch }}
           path: dist/*.whl
 
-  publish:
-    needs: build
+  build-pure:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+
+      - name: Build pure Python wheel
+        run: |
+          pip install --upgrade pip build
+          cp pyproject-pure.toml pyproject.toml
+          python -m build --wheel
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: wheels-pure
+          path: dist/*.whl
+
+  publish:
+    needs: [build, build-pure]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v6
         with:
           path: dist
 
