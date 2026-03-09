@@ -332,7 +332,6 @@ class TestKnownArrays:
             data=data,
             kernel=kernel,
             borders='constant',
-            threads=2,
         ).mean
 
         np.testing.assert_allclose(result, expected, rtol=1e-5, atol=1e-5)
@@ -355,7 +354,6 @@ class TestKnownArrays:
             data=data,
             kernel=kernel,
             borders='constant',
-            threads=2,
         ).mean
 
         np.testing.assert_allclose(result, expected, rtol=1e-5, atol=1e-5)
@@ -378,7 +376,6 @@ class TestKnownArrays:
             data=data,
             kernel=kernel,
             borders=None,
-            threads=2,
         ).mean
 
         np.testing.assert_allclose(result, expected, rtol=1e-5, atol=1e-5)

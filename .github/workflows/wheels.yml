@@ -117,6 +117,11 @@ jobs:
           cp pyproject-pure.toml pyproject.toml
           python -m build --wheel
 
+      - name: Test pure Python wheel
+        run: |
+          pip install dist/*.whl pytest
+          pytest -s -v tests/test_known_values.py
+
       - uses: actions/upload-artifact@v6
         with:
           name: wheels-pure
