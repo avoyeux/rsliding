@@ -385,7 +385,7 @@ class TestKnownArrays:
             data_2d: tuple[np.ndarray, np.ndarray, np.ndarray],
         ) -> None:
         """
-        Tests the SlidingStandardDeviation class when borders are set to 'constant'.
+        Tests the SlidingMedian class when borders are set to 'constant'.
 
         Args:
             data_2d (tuple[np.ndarray, np.ndarray, np.ndarray]): the data and kernels to test for.
@@ -408,7 +408,7 @@ class TestKnownArrays:
             data_2d: tuple[np.ndarray, np.ndarray, np.ndarray],
         ) -> None:
         """
-        Tests the SlidingStandardDeviation class when borders are set to 'constant'.
+        Tests the SlidingMedian class when borders are set to 'constant'.
 
         Args:
             data_2d (tuple[np.ndarray, np.ndarray, np.ndarray]): the data and kernels to test for.
@@ -467,7 +467,6 @@ class TestKnownArrays:
             data=data,
             kernel=kernel,
             borders='constant',
-            threads=2,
         ).standard_deviation
 
         np.testing.assert_allclose(result, expected, rtol=1e-5, atol=1e-5)
@@ -491,7 +490,6 @@ class TestKnownArrays:
             data=data,
             kernel=kernel,
             borders='constant',
-            threads=2,
         ).standard_deviation
 
         np.testing.assert_allclose(result, expected, rtol=1e-5, atol=1e-5)
@@ -514,7 +512,6 @@ class TestKnownArrays:
             data=data,
             kernel=kernel,
             borders=None,
-            threads=2,
         ).standard_deviation
 
         np.testing.assert_allclose(result, expected, rtol=1e-5, atol=1e-5)
