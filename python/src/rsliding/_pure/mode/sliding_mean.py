@@ -154,7 +154,7 @@ class SlidingMean:
                 data=valid_mask.astype(self._data.dtype),
                 kernel=np.flip(self._kernel).astype(self._data.dtype),
                 borders=self._borders,
-                cval=1. if self._borders == 'constant' else 0.,
+                pad_value=1. if self._borders == 'constant' else 0.,
                 threads=self._threads,
             ).result
             return valid_mask, weight_sum#type:ignore
