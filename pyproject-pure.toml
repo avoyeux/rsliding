@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rsliding"
-version = "2.0.0"
+version = "2.0.1"
 description = "Sliding sigma-clipping, mean, median and standard deviation utilities."
 authors = [
     { name = "Voyeux Alfred", email = "voyeuxalfred@gmail.com" },
