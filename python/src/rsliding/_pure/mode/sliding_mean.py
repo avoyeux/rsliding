@@ -10,11 +10,12 @@ import numpy as np
 from ..convolution import BorderType, Convolution
 
 # TYPE ANNOTATIONs
-from typing import cast
+import numpy.typing as npt
+from typing import cast, TypeAlias
+KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
 
 # API public
 __all__ = ["SlidingMean"]
-
 
 
 class SlidingMean:
@@ -28,10 +29,13 @@ class SlidingMean:
 
     def __init__(
         self,
-        data: np.ndarray[tuple[int, ...], np.dtype[np.floating]],
-        kernel: int | tuple[int, ...] | np.ndarray[tuple[int, ...], np.dtype[np.floating]],
-        borders: BorderType = "reflect",
-        threads: int | None = 1,
+            data: npt.NDArray[np.float64],
+            kernel: KernelType,
+            borders: BorderType,
+            pad_value: float = 0.,
+            force_contiguous: bool = True,
+            threads: int | None = 1,
+            neumaier: bool = True,
     ) -> None:
         """
         Computes the sliding mean of a given ndarray data and kernel.
@@ -52,8 +56,14 @@ class SlidingMean:
                 have the equivalent in np.pad or scipy.ndimage). If None, uses adaptative borders,
                 i.e. padding with no values and hence smaller kernels at the borders.
                 Defaults to 'reflect'.
+            pad_value (float, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
+            force_contiguous (bool, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
             threads (int | None, optional): the number of threads to use for the computation.
                 If None, doesn't change change the default behaviour. Defaults to 1.
+            neumaier (bool, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
         """
 
         self._data = data

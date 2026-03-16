@@ -12,6 +12,11 @@ from numba import set_num_threads
 from ..convolution import Padding, BorderType
 from .numba_functions import sliding_weighted_median_nd
 
+# TYPE ANNOTATIONs
+import numpy.typing as npt
+from typing import TypeAlias
+KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
+
 # API public
 __all__ = ["SlidingMedian"]
 
@@ -28,9 +33,11 @@ class SlidingMedian:
 
     def __init__(
             self,
-            data: np.ndarray[tuple[int, ...], np.dtype[np.floating]],
-            kernel: int | tuple[int, ...] | np.ndarray[tuple[int, ...], np.dtype[np.floating]],
-            borders: BorderType = "reflect",
+            data: npt.NDArray[np.float64],
+            kernel: KernelType,
+            borders: BorderType,
+            pad_value: float = 0.,
+            force_contiguous: bool = True,
             threads: int | None = 1,
         ) -> None:
         """
@@ -51,6 +58,10 @@ class SlidingMedian:
                 borders used by OpenCV (not all OpenCV borders are implemented as some don't
                 have the equivalent in np.pad or scipy.ndimage). If None, uses adaptative borders,
                 i.e. no padding and hence smaller kernels at the borders. Defaults to 'reflect'.
+            pad_value (float, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
+            force_contiguous (bool, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
             threads (int | None, optional): the number of threads to used by numba for the
                 computation. If None, doesn't change change the default behaviour. Defaults to 1.
         """

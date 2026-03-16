@@ -7,8 +7,10 @@ from __future__ import annotations
 import numpy as np
 
 # TYPE ANNOTATIONs
+import numpy.typing as npt
 from typing import Literal, cast, TypeAlias
 BorderType: TypeAlias = Literal['reflect', 'constant', 'replicate'] | None
+KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
 
 # API public
 __all__ = ['BorderType', 'Padding']
@@ -23,9 +25,11 @@ class Padding:
 
     def __init__(
             self,
-            data: np.ndarray[tuple[int, ...], np.dtype[np.floating]],
-            kernel: tuple[int, ...],
+            data: npt.NDArray[np.float64],
+            kernel: KernelType,
             borders: BorderType = 'reflect',
+            pad_value: float = 0.,
+            force_contiguous: bool = True,
         ) -> None:
         """
         Adds padding to the given data according to the border type.
@@ -38,9 +42,17 @@ class Padding:
             kernel (tuple[int, ...]): the kernel size used for the convolution.
             borders (BorderType, optional): the border type to use for padding.
                 Defaults to 'reflect'.
+            pad_value (float, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
+            force_contiguous (bool, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
         """
 
         self._data = data
+        if isinstance(kernel, int):
+            kernel = (kernel,) * data.ndim
+        elif isinstance(kernel, np.ndarray):
+            kernel = tuple(kernel.shape)
         self._kernel = kernel
         self._borders = borders
 
@@ -48,7 +60,7 @@ class Padding:
         self._padded_data = self._add_padding()
 
     @property
-    def padded(self) -> np.ndarray[tuple[int, ...], np.dtype[np.floating]]:
+    def padded(self) -> npt.NDArray[np.float64]:
         """
         The padded data using np.pad and the borders choice.
 

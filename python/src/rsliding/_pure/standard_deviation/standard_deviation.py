@@ -13,6 +13,11 @@ from numpy.lib.stride_tricks import sliding_window_view
 # IMPORTs local
 from ..convolution import BorderType, Padding
 
+# TYPE ANNOTATIONs
+import numpy.typing as npt
+from typing import TypeAlias
+KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
+
 # API public
 __all__ = ["SlidingStandardDeviation"]
 
@@ -29,9 +34,13 @@ class SlidingStandardDeviation:
 
     def __init__(
             self,
-            data: np.ndarray[tuple[int, ...], np.dtype[np.floating]],
-            kernel: int | tuple[int, ...] | np.ndarray[tuple[int, ...], np.dtype[np.floating]],
-            borders: BorderType = 'reflect',
+            data: npt.NDArray[np.float64],
+            kernel: KernelType,
+            borders: BorderType,
+            pad_value: float = 0.,
+            force_contiguous: bool = True,
+            threads: int | None = 1,
+            neumaier: bool = True,
         ) -> None:
         """
         Computes the sliding standard deviations for data (with/without NaNs) using a kernel
@@ -59,6 +68,14 @@ class SlidingStandardDeviation:
                 borders used by OpenCV (not all OpenCV borders are implemented as some don't have
                 the equivalent in np.pad or scipy.ndimage). If None, uses adaptative borders, i.e.
                 no padding and hence smaller kernels at the borders. Defaults to 'reflect'.
+            pad_value (float, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
+            force_contiguous (bool, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
+            threads (int | None, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
+            neumaier (bool, optional): NOT USED. Here only for API consistency with the
+                corresponding Rust struct.
         """
 
         self._data = data

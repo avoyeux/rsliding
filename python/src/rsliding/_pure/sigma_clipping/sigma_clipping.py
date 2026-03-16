@@ -17,8 +17,9 @@ from ..mode import SlidingMedian
 from ..standard_deviation import SlidingStandardDeviation
 
 # TYPE ANNOTATIONs
+import numpy.typing as npt
 from typing import cast, Literal, TypeAlias
-KernelType: TypeAlias = int | tuple[int, ...] | np.ndarray[tuple[int, ...], np.dtype[np.floating]]
+KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
 
 # API public
 __all__ = ["SlidingSigmaClipping"]
@@ -26,8 +27,6 @@ __all__ = ["SlidingSigmaClipping"]
 # SENTINEL for default sigma lower/upper
 class _UseSigma: pass
 _USE_SIGMA = _UseSigma()
-
-# todo test the code on 1D data.
 
 
 
@@ -44,22 +43,25 @@ class SlidingSigmaClipping:
 
     def __init__(
             self,
-            data: np.ndarray,
+            data: npt.NDArray[np.float64],
             kernel: KernelType = 3,
             center_choice: Literal['median', 'mean'] = 'median',
             sigma: float = 3.,
             sigma_lower: float | None | _UseSigma = _USE_SIGMA,
             sigma_upper: float | None | _UseSigma = _USE_SIGMA,
-            max_iters: int | None = 5,
             borders: BorderType = 'reflect',
+            pad_value: float = 0.,
+            max_iters: int | None = 5,
+            masked_array: bool = False,
+            force_contiguous: bool = True,
             threads: int | None = 1,
-            masked_array: bool = True,
+            neumaier: bool = True,
         ) -> None:
         """
         Runs the sliding sigma clipping where the flagged pixels are swapped with the center value
         (mean or median) for that pixel. The kernel needs to be of the same dimensions than the
         input data and have positive odd dimensions.
-        The result is accessed through the 'results' property and will be a numpy.ma.MaskedArray if
+        The result is accessed through the 'clipped' property and will be a numpy.ma.MaskedArray if
         'masked_array' is set to True, else a numpy.array. The sigma clipping is done iteratively
         'max_iters' number of times or till there are no more pixels flagged.
         ! Uses a lot of memory, ~kernel.size * input_data.nbytes.
@@ -86,11 +88,17 @@ class SlidingSigmaClipping:
                 borders used by OpenCV (not all OpenCV borders are implemented as some don't have
                 the equivalent in np.pad or scipy.ndimage). If None, uses adaptative borders, i.e.
                 no padding and hence smaller kernels at the borders. Defaults to 'reflect'.
+            pad_value (float, optional): NOT USED. Here only so that the class signature is the
+                same than the corresponding rust code.
+            force_contiguous (bool, optional): NOT USED. Here only so that the class signature is
+                the same than the corresponding rust code.
             threads (int | None, optional): the number of threads to use for numba parallelization.
                 when setting 'center_choice' to 'median'. If None, uses the default number of
                 threads. Not used for the standard deviation. Defaults to 1.
             masked_array (bool, optional): whether to return a MaskedArray (True) or a normal
                 ndarray (False). Defaults to True.
+            neumaier (bool, optional): NOT USED. Here only so that the class signature is the same
+                than the corresponding rust code.
 
         Raises:
             ValueError: if both 'sigma_lower' and 'sigma_upper' are None.
@@ -116,7 +124,7 @@ class SlidingSigmaClipping:
         self._sigma_clipped = self._run()
 
     @property
-    def results(self) -> np.ndarray | ma.MaskedArray:
+    def clipped(self) -> np.ndarray | ma.MaskedArray:
         """
         The sigma clipped input where the pixels that where flagged are set to the mode value
         (median or mean) gotten for that pixel.
