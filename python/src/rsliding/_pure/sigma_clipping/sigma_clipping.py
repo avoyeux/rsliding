@@ -4,10 +4,8 @@ Code to perform n-dimensional sigma clipping on numpy arrays (with/without NaNs)
 """
 from __future__ import annotations
 
-# IMPORTs alias
+# IMPORTs third-party
 import numpy as np
-
-# IMPORTs sub
 from numpy import ma
 from numba import set_num_threads
 
@@ -17,8 +15,8 @@ from ..mode import SlidingMedian
 from ..standard_deviation import SlidingStandardDeviation
 
 # TYPE ANNOTATIONs
-import numpy.typing as npt
 from typing import cast, Literal, TypeAlias
+import numpy.typing as npt
 KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
 
 # API public

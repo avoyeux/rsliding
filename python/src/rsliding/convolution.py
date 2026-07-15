@@ -3,7 +3,7 @@ Code to compute the convolution of a given ndarray data with NaN values and a we
 """
 from __future__ import annotations
 
-# IMPORTs
+# IMPORTs third-party
 import numpy as np
 
 # IMPORTs local
@@ -13,7 +13,7 @@ from .utils import KernelType, BorderType, BaseCheck
 # TYPE ANNOTATIONs
 import numpy.typing as npt
 
-# TYPE ANNOTATIONs
+# API public
 __all__ = ["Convolution"]
 
 
@@ -94,7 +94,7 @@ class Convolution(BaseCheck):
         convolution  = _rust.convolution(
             self._data,
             self._kernel,
-            pad_mode,#type:ignore
+            pad_mode,
             pad_value,
             self._neumaier,
             self._threads,

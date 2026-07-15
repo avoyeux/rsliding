@@ -5,6 +5,7 @@ Contains the public python API for the rsliding library.
 try:
     # IMPORTs rust local
     from .padding import Padding
+    from .binning_fit import BinningFit
     from .convolution import Convolution
     from .sliding_mean import SlidingMean
     from .sliding_median import SlidingMedian
@@ -20,13 +21,14 @@ except ImportError:
     # IMPORTs python local
     from ._pure import (
         Padding, Convolution, SlidingMean, SlidingMedian, SlidingStandardDeviation,
-        SlidingSigmaClipping,
+        SlidingSigmaClipping, BinningFit,
     )
 
 # EXPORT
 __all__ = [
     "Padding",
     "Convolution",
+    "BinningFit",
     "SlidingMean",
     "SlidingMedian",
     "SlidingStandardDeviation",

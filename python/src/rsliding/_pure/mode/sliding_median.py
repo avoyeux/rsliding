@@ -3,9 +3,8 @@ Code to compute the sliding median given an ndarray data and a kernel.
 """
 from __future__ import annotations
 
-# IMPORTs alias
+# IMPORTs third-party
 import numpy as np
-
 from numba import set_num_threads
 
 # IMPORTs local
@@ -13,8 +12,8 @@ from ..convolution import Padding, BorderType
 from .numba_functions import sliding_weighted_median_nd
 
 # TYPE ANNOTATIONs
-import numpy.typing as npt
 from typing import TypeAlias
+import numpy.typing as npt
 KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
 
 # API public

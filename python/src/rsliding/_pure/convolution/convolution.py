@@ -8,18 +8,14 @@ from __future__ import annotations
 
 # IMPORTs third-party
 import cv2
-
-# IMPORTs alias
 import numpy as np
-
-# IMPORTs sub
 from scipy.ndimage import convolve
 from threadpoolctl import threadpool_limits
 
 # TYPE ANNOTATIONs
+from typing import TypeAlias
 import numpy.typing as npt
 from .padding import BorderType
-from typing import TypeAlias
 KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
 
 # API public

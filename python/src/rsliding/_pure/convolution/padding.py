@@ -3,12 +3,12 @@ Code to convert the padding choices from cv2.filter2D to numpy.pad.
 """
 from __future__ import annotations
 
-# IMPORTs alias
+# IMPORTs third-party
 import numpy as np
 
 # TYPE ANNOTATIONs
-import numpy.typing as npt
 from typing import Literal, cast, TypeAlias
+import numpy.typing as npt
 BorderType: TypeAlias = Literal['reflect', 'constant', 'replicate'] | None
 KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
 

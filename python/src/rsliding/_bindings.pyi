@@ -2,10 +2,12 @@
 Contains the function signatures of the rust functions that are exposed to python.
 """
 
-# IMPORTs
+# IMPORTs third-party
 import numpy as np
-import numpy.typing as npt
+
+# TYPE ANNOTATIONs
 from typing import Literal
+import numpy.typing as npt
 
 
 
@@ -63,3 +65,16 @@ def sliding_sigma_clipping(
         max_iterations: int | None,
         num_threads: int | None,
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.bool_]]: ...
+
+def binning_fit(
+        data: npt.NDArray[np.float64],
+        error: npt.NDArray[np.float64],
+        waves: npt.NDArray[np.float64],
+        fit_axis: int,
+        bins: tuple[int, ...],
+        init_guess: npt.NDArray[np.float64],
+        lower_bounds: npt.NDArray[np.float64],
+        upper_bounds: npt.NDArray[np.float64],
+        x_scales: npt.NDArray[np.float64],
+        num_threads: int | None,
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...

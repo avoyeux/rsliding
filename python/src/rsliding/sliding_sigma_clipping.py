@@ -4,7 +4,7 @@ kernel.
 """
 from __future__ import annotations
 
-# IMPORTs
+# IMPORTs third-party
 import numpy as np
 
 # IMPORTs local
@@ -144,7 +144,7 @@ class SlidingSigmaClipping(BaseCheck):
             self._data,
             self._kernel,
             self._center_choice,
-            pad_mode,#type:ignore
+            pad_mode,
             pad_value,
             self._neumaier,
             self._sigma_upper,#type:ignore

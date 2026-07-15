@@ -3,19 +3,20 @@ Code to compute the sliding mean given a kernel.
 """
 from __future__ import annotations
 
-# IMPORTs alias
+# IMPORTs third-party
 import numpy as np
 
 # IMPORTs local
 from ..convolution import BorderType, Convolution
 
 # TYPE ANNOTATIONs
-import numpy.typing as npt
 from typing import cast, TypeAlias
+import numpy.typing as npt
 KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
 
 # API public
 __all__ = ["SlidingMean"]
+
 
 
 class SlidingMean:

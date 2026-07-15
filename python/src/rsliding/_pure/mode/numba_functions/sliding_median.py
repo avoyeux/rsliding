@@ -4,10 +4,8 @@ a kernel, with weights.
 """
 from __future__ import annotations
 
-# IMPORTs alias
+# IMPORTs third-party
 import numpy as np
-
-# IMPORTs sub
 from numba import njit, prange
 
 # API public
@@ -32,7 +30,7 @@ def sliding_weighted_median_nd(data: np.ndarray, kernel: np.ndarray) -> np.ndarr
 
     # MEDIAN sliding
     result_flat = _sliding_weighted_median_nd(data, kernel)
-    return result_flat.reshape(output_shape)#type:ignore
+    return result_flat.reshape(output_shape)
 
 @njit
 def _kernel_setup(
@@ -57,7 +55,7 @@ def _kernel_setup(
     # KERNEL 1D
     flat_kernel = kernel.ravel()
     valid_kernel_mask = (np.abs(flat_kernel) >= 1e-10)
-    return flat_kernel, valid_kernel_mask#type:ignore
+    return flat_kernel, valid_kernel_mask
 
 @njit(parallel=True)
 def _sliding_weighted_median_nd(data: np.ndarray, kernel: np.ndarray) -> np.ndarray:

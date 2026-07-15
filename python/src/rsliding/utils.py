@@ -3,7 +3,7 @@ Base class (mixin) used to defined the same shared kernel and contiguous checks.
 """
 from __future__ import annotations
 
-# IMPORTs
+# IMPORTs third-party
 import numpy as np
 
 # TYPE ANNOTATIONs
@@ -17,8 +17,7 @@ __all__ = ["KernelType", "BorderType", "BaseCheck"]
 
 
 
-class _HasData(Protocol):
-    _data: npt.NDArray[np.float64]
+class _HasData(Protocol): _data: npt.NDArray[np.float64]
 class _HasDataAndKernel(Protocol):
     _data: npt.NDArray[np.float64]
     _kernel: npt.NDArray[np.float64]
@@ -29,7 +28,7 @@ class BaseCheck:
     operations. Also contains a method to convert the data and kernel to C contiguous arrays.
     """
 
-    def _check_kernel(self: _HasData,kernel: KernelType) -> npt.NDArray[np.float64]:
+    def _check_kernel(self: _HasData, kernel: KernelType) -> npt.NDArray[np.float64]:
         """
         To check the input kernel shape, type and convert it to an ndarray if needed.
 
@@ -48,7 +47,7 @@ class BaseCheck:
         if isinstance(kernel, int):
             if kernel <=0 or kernel % 2 == 0:
                 raise ValueError("The kernel size must be a positive odd integer.")
-            return np.ones((kernel,) * self._data.ndim, dtype=self._data.dtype)#type:ignore
+            return np.ones((kernel,) * self._data.ndim, dtype=self._data.dtype)
         elif isinstance(kernel, tuple):
             if any(k <=0 or k % 2 == 0 for k in kernel):
                 raise ValueError("All kernel dimensions must be positive odd integers.")
@@ -57,7 +56,7 @@ class BaseCheck:
                     "If 'kernel' is given as a tuple, it must have the same number of "
                     "dimensions as 'data'."
                 )
-            return np.ones(kernel, dtype=self._data.dtype)#type:ignore
+            return np.ones(kernel, dtype=self._data.dtype)
         elif isinstance(kernel, np.ndarray):
             if any(s <=0 or s % 2 == 0 for s in kernel.shape):
                 raise ValueError("All kernel dimensions must be positive odd integers.")

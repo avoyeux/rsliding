@@ -4,7 +4,7 @@ The padding naming follows the cv2.filter2D convention, except when set to None.
 """
 from __future__ import annotations
 
-# IMPORTs
+# IMPORTs third-party
 import numpy as np
 
 # IMPORTs local
@@ -81,4 +81,4 @@ class Padding(BaseCheck):
 
         pad_mode = self._borders if self._borders is not None else 'constant'
         pad_value = self._pad_value if self._borders is not None else np.nan
-        return _rust.padding(self._data, self._kernel, pad_mode, pad_value)#type:ignore
+        return _rust.padding(self._data, self._kernel, pad_mode, pad_value)

@@ -4,18 +4,16 @@ Code to compute the sliding standard deviation given data (with/without NaNs) an
 """
 from __future__ import annotations
 
-# IMPORTs alias
+# IMPORTs third-party
 import numpy as np
-
-# IMPORTs sub
 from numpy.lib.stride_tricks import sliding_window_view
 
 # IMPORTs local
 from ..convolution import BorderType, Padding
 
 # TYPE ANNOTATIONs
-import numpy.typing as npt
 from typing import TypeAlias
+import numpy.typing as npt
 KernelType: TypeAlias = int | tuple[int, ...] | npt.NDArray[np.float64]
 
 # API public
@@ -27,7 +25,7 @@ class SlidingStandardDeviation:
     """
     To compute the sliding standard deviations for data (with/without NaNs) using a kernel
     (with/without weights).
-    The inputs need to be of np.floating type when using ndarrays (float64 recommended).
+    The inputs need to be of np.floating type when using ndarray (float64 recommended).
     The kernel must have odd dimensions.
     The sliding mean is also computed at the same time.
     """
@@ -45,7 +43,7 @@ class SlidingStandardDeviation:
         """
         Computes the sliding standard deviations for data (with/without NaNs) using a kernel
         (with/without weights).
-        The inputs need to be of np.floating type when using ndarrays (float64 recommended).
+        The inputs need to be of np.floating type when using ndarray (float64 recommended).
         The kernel must have odd dimensions.
         Given the way the standard deviation is computed (using a stable solution, c.f.
         '_get_standard_deviation'), the sliding mean is also computed at the same time as an
@@ -124,7 +122,7 @@ class SlidingStandardDeviation:
         if isinstance(kernel, int):
             if kernel <=0 or kernel % 2 == 0:
                 raise ValueError("The kernel size must be a positive odd integer.")
-            return np.ones((kernel,) * self._data.ndim, dtype=self._data.dtype)#type:ignore
+            return np.ones((kernel,) * self._data.ndim, dtype=self._data.dtype)
         elif isinstance(kernel, tuple):
             if any(k <=0 or k % 2 == 0 for k in kernel):
                 raise ValueError("All kernel dimensions must be positive odd integers.")
@@ -133,7 +131,7 @@ class SlidingStandardDeviation:
                     "If 'kernel' is given as a tuple, it must have the same number of "
                     "dimensions as 'data'."
                 )
-            return np.ones(kernel, dtype=self._data.dtype)#type:ignore
+            return np.ones(kernel, dtype=self._data.dtype)
         elif isinstance(kernel, np.ndarray):
             if any(s <=0 or s % 2 == 0 for s in kernel.shape):
                 raise ValueError("All kernel dimensions must be positive odd integers.")
@@ -172,7 +170,7 @@ class SlidingStandardDeviation:
         padded = Padding(
             data=self._data,
             kernel=self._kernel.shape,
-            borders=self._borders,#type:ignore
+            borders=self._borders,
         ).padded
 
         # NaN handling
@@ -184,13 +182,13 @@ class SlidingStandardDeviation:
         windows = sliding_window_view(
             x=arr_filled,
             window_shape=self._kernel.shape,
-            axis=axis,#type:ignore
-        )
+            axis=axis,
+        )#type:ignore
         valid_windows = sliding_window_view(
             x=valid,
             window_shape=self._kernel.shape,
-            axis=axis,#type:ignore
-        )
+            axis=axis,
+        )#type:ignore
 
         # BUFFER window-shaped intermediates (huge memory usage)
         buffer = np.empty(windows.shape, dtype=self._data.dtype)
@@ -237,4 +235,4 @@ class SlidingStandardDeviation:
         # STD 
         with np.errstate(divide="ignore", invalid="ignore"):
             std = np.where(count > 0, np.sqrt(M2 / count), 0.0).astype(self._data.dtype)
-        return mean, std#type:ignore
+        return mean, std

@@ -1,6 +1,7 @@
 //! Contains all the needed python bindings for the sliding operations.
 
 // local
+pub mod binning_fit;
 pub mod convolution;
 pub mod padding;
 pub mod sliding_mean;
