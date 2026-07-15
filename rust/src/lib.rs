@@ -39,6 +39,7 @@ fn _bindings(m: &Bound<'_, PyModule>) -> PyResult<()> {
         bindings::sliding_sigma_clipping::py_sliding_sigma_clipping,
         m
     )?)?;
+    m.add_function(wrap_pyfunction!(bindings::binning_fit::py_binning_fit, m)?)?;
     Ok(())
 }
 
@@ -101,7 +102,7 @@ mod tests {
     }
 
     #[test]
-    fn check_mean_zero_asym() {
+    fn check_mean_zero_asymmetry() {
         // prepare data
         let (mut data, _, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
@@ -166,7 +167,7 @@ mod tests {
     }
 
     #[test]
-    fn check_median_zero_asym() {
+    fn check_median_zero_asymmetry() {
         let (mut data, _, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
         let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
@@ -230,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn check_mean_std_zero_asym() {
+    fn check_mean_std_zero_asymmetry() {
         let (mut data, _, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);
         let mut padded = SlidingWorkspace::new(data.shape(), kernel, pad_mode).unwrap();
@@ -314,7 +315,7 @@ mod tests {
     }
 
     #[test]
-    fn check_standard_deviation_zero_asym() {
+    fn check_standard_deviation_zero_asymmetry() {
         // prepare data
         let (mut data, _, kernel) = own_data();
         let pad_mode = PaddingMode::Constant(0.);

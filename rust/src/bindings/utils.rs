@@ -46,7 +46,7 @@ pub fn py_array_to_array_d(arr: &PyReadonlyArrayDyn<'_, f64>) -> PyResult<ArrayD
 ///
 /// # Returns
 /// - `Ok(Bound<PyArrayDyn<T>>)`: NumPy array with the same shape and values as `arr`.
-/// - `Err(PyTypeError)`: If reshaping/downcasting to `PyArrayDyn<T>` fails.
+/// - `Err(PyTypeError)`: If reshaping/casting to `PyArrayDyn<T>` fails.
 ///
 /// # Notes
 /// - Ownership of array data is transferred into Python.
@@ -61,9 +61,9 @@ where
 {
     let shape = arr.shape().to_vec();
     let (flat, _offset) = arr.into_raw_vec_and_offset();
-    let arr1 = PyArray1::from_vec_bound(py, flat);
-    let shape_tuple = PyTuple::new_bound(py, shape);
+    let arr1 = PyArray1::from_vec(py, flat);
+    let shape_tuple = PyTuple::new(py, shape)?;
     arr1.call_method1("reshape", (shape_tuple,))?
-        .downcast_into::<PyArrayDyn<T>>()
+        .cast_into::<PyArrayDyn<T>>()
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyTypeError, _>(e.to_string()))
 }

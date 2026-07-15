@@ -68,7 +68,7 @@ pub fn py_sliding_median<'py>(
                 .build()
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-            py.allow_threads(|| {
+            py.detach(|| {
                 pool.install(|| {
                     // padding
                     let mut padded =
@@ -81,7 +81,7 @@ pub fn py_sliding_median<'py>(
             });
         }
         None => {
-            py.allow_threads(|| {
+            py.detach(|| {
                 // padding
                 let mut padded =
                     SlidingWorkspace::new(data_arr.shape(), kernel_arr, padding_mode).unwrap();
